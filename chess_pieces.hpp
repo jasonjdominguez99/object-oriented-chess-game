@@ -5,7 +5,9 @@
 // 
 // Author: Jason Dominguez
 // Created: 23/04/2021
-// Last modified: 23/04/2021
+// Last modified: 24/04/2021
+// - Added function to get all possible moves for 
+//   a given chess piece color
 
 
 #ifndef CHESS_PIECES_H
@@ -26,6 +28,8 @@ namespace pcs {
     std::string color_to_string(color chess_piece_color);
     color string_to_color(std::string chess_piece_color);
     color opposite_color(color chess_piece_color);
+
+    std::vector<int> get_all_possible_moves(color piece_color, const brd::board& chess_board);
 
     class chess_piece
     {

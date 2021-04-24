@@ -10,6 +10,8 @@
 // - Added functionality to check if king will move into
 //   checkmate position (i.e. make sure it doesn't move somewhere
 //   where it can be captured)
+// - Added function to get all possible moves for 
+//   a give chess piece color
 
 
 #include <vector>
@@ -39,6 +41,7 @@ namespace pcs {
                 return "Invalid chess piece color";
         }
     }
+
     color string_to_color(std::string chess_piece_color) {
         if (chess_piece_color == "white" || chess_piece_color == "White") {
             return white;
@@ -49,12 +52,38 @@ namespace pcs {
             exit(-1);
         }
     }
+
     color opposite_color(color chess_piece_color) {
         if (chess_piece_color == white) {
             return black;
         } else {
             return white;
         }
+    }
+
+    std::vector<int> get_all_possible_moves(color piece_color, const board& chess_board) {
+        std::vector<int> all_possible_moves;
+        for (int i{} ; i < 8*8 ; i++) {
+            if (chess_board[i] && chess_board[i]->get_piece_color() == piece_color) {
+                std::vector<int> piece_possible_moves;
+                if (chess_board[i]->get_symbol() == 'K') {
+                    // In the case of a king, assume it can do all its possible moves, to avoid
+                    // infinite loop trying to get king's possible moves
+                    if (i/8 < 7) { piece_possible_moves.push_back(i + 8); }
+                    if (i/8 > 0) { piece_possible_moves.push_back(i - 8); }
+                    if (i%8 < 7) { piece_possible_moves.push_back(i + 1); }
+                    if (i%8 > 0) { piece_possible_moves.push_back(i - 1); }
+                } else {
+                    piece_possible_moves = chess_board[i]->get_valid_moves(i, chess_board);
+                }
+            
+                all_possible_moves.insert(std::end(all_possible_moves), 
+                                          std::begin(piece_possible_moves),
+                                          std::end(piece_possible_moves));
+            }
+        }
+
+        return all_possible_moves;
     }
 }
 
@@ -522,25 +551,7 @@ std::vector<int> king::get_valid_moves(int start_position, const board& chess_bo
     
     // Check that none of the 'allowed' moves puts the king in a position to get taken
     std::vector<int> all_opposition_possible_moves;
-    for (int i{} ; i < 8*8 ; i++) {
-        if (chess_board[i] && chess_board[i]->get_piece_color() != this->get_piece_color()) {
-            std::vector<int> opposition_piece_possible_moves;
-            if (chess_board[i]->get_symbol() == 'K') {
-                // In the case of a king, assume it can do all its possible moves, to avoid
-                // infinite loop trying to get king's possible moves
-                if (i/8 < 7) { opposition_piece_possible_moves.push_back(i + 8); }
-                if (i/8 > 0) { opposition_piece_possible_moves.push_back(i - 8); }
-                if (i%8 < 7) { opposition_piece_possible_moves.push_back(i + 1); }
-                if (i%8 > 0) { opposition_piece_possible_moves.push_back(i - 1); }
-            } else {
-                opposition_piece_possible_moves = chess_board[i]->get_valid_moves(i, chess_board);
-            }
-            
-            all_opposition_possible_moves.insert(std::end(all_opposition_possible_moves), 
-                                                 std::begin(opposition_piece_possible_moves),
-                                                 std::end(opposition_piece_possible_moves));
-        }
-    }
+    all_opposition_possible_moves = get_all_possible_moves(opposite_color(this->get_piece_color()), chess_board);
     // Remove any of these opposition moves from the possible moves
     auto move_found = [&all_opposition_possible_moves](const int& position) -> bool {
         return std::find(all_opposition_possible_moves.begin(),

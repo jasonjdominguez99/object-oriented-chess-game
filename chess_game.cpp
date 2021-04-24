@@ -4,11 +4,15 @@
 // 
 // Author: Jason Dominguez
 // Created: 23/04/2021
-// Last modified: 23/04/2021
+// Last modified: 24/04/2021
+// - Added functionality to see if check has occurred
+// - Added functionality to see if checkmate has occurred
 
 
 #include <string>
 #include <vector>
+#include <iterator>
+#include <algorithm>
 #include "player_class.hpp"
 #include "chess_pieces.hpp"
 #include "chess_board.hpp"
@@ -57,10 +61,49 @@ int main() {
 
             std::cout << std::endl << chess_board << std::endl;
 
+            // See if check has occured (this player can capture the opposition king on their next turn)
+            std::vector<int> possible_next_moves;
+            possible_next_moves = get_all_possible_moves(current_player.get_piece_color(), chess_board);
+            // Find if any of these moves will capture the opposition's king
+            bool check_on_opposition_king = std::find_if(possible_next_moves.begin(), possible_next_moves.end(),
+                                                         [&chess_board](int board_index) {
+                                                             if (chess_board[board_index]) {
+                                                                 return chess_board[board_index]->get_symbol() == 'K';
+                                                             }
+                                                         }) != possible_next_moves.end();
+            // See if checkmate has occured (this player will capture the opposition king on their next turn)
+            bool checkmate{false};
+            if (check_on_opposition_king) {
+                int opposition_king_board_index{};
+                for (int i{} ; i < 8*8 ; i++) {
+                    if (chess_board[i] && 
+                        chess_board[i]->get_piece_color() != current_player.get_piece_color() &&
+                        chess_board[i]->get_symbol() == 'K') {
+                            
+                        opposition_king_board_index = i;
+                    }
+                }
+                std::vector<int> opposition_king_possible_moves;
+                opposition_king_possible_moves = chess_board[opposition_king_board_index]->get_valid_moves(opposition_king_board_index, chess_board);
+                if (opposition_king_possible_moves.size() == 0) {
+                    // Opposition king cannot escape getting captured
+                    checkmate = true;
+                }
+                
+            }
+
+            if (check_on_opposition_king && !checkmate) {
+                std::cout << "Check!" << std::endl;
+            } else if (checkmate) {
+                std::cout << "Checkmate!" << std::endl;
+                break;
+            }
+
             swap_player(current_player, player_one, player_two);
         }
     }
-    
+    std::cout << "Game over!" << std::endl;
+
     return 0;
 }
 

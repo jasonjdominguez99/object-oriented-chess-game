@@ -155,7 +155,7 @@ void player_turn(player chess_player, board& chess_board) {
         }
     }
 
-    std::cout << "To which of these positions do you want to move you piece?" << std::endl;
+    std::cout << "To which of these positions do you want to move your piece?" << std::endl;
     std::string end_position;
     std::cin >> end_position;
     int end_position_index = board_position_to_index(end_position);

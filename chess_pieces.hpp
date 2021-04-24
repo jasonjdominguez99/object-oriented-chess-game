@@ -54,6 +54,8 @@ namespace pcs {
         color get_piece_color() const { return piece_color; }
         int get_id() { return piece_id; }
         int get_id() const { return piece_id; }
+        char get_symbol() { return piece_symbol; }
+        char get_symbol() const { return piece_symbol; }
 
         chess_piece & operator=(chess_piece &chess_piece_to_copy) {
             if (&chess_piece_to_copy == this) return *this; // account for self-assignment

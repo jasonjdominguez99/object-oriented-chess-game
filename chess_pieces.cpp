@@ -5,10 +5,16 @@
 // 
 // Author: Jason Dominguez
 // Created: 23/04/2021
-// Last modified: 23/04/2021
+// Last modified: 24/04/2021
+// - Fixed error with checking for diagonal moves with king
+// - Added functionality to check if king will move into
+//   checkmate position (i.e. make sure it doesn't move somewhere
+//   where it can be captured)
 
 
 #include <vector>
+#include <iterator>
+#include <algorithm>
 #include "chess_pieces.hpp"
 #include "chess_board.hpp"
 
@@ -494,25 +500,57 @@ std::vector<int> king::get_valid_moves(int start_position, const board& chess_bo
     }
     // Check if diagonal moves are possible
     if (start_position_row + 1 < 8 && start_position_col + 1 < 8) {
-        if (!chess_board[start_position + (8 + 1)] && chess_board[start_position + (8 + 1)]->get_piece_color() != this->get_piece_color()) {
+        if (!chess_board[start_position + (8 + 1)] || chess_board[start_position + (8 + 1)]->get_piece_color() != this->get_piece_color()) {
             valid_new_positions.push_back(start_position + (8 + 1)); // move forward and right by 1
         }
     }
     if (start_position_row + 1 < 8 && start_position_col - 1 >= 0) {
-        if (!chess_board[start_position + (8 - 1)] && chess_board[start_position + (8 - 1)]->get_piece_color() != this->get_piece_color()) {
+        if (!chess_board[start_position + (8 - 1)] || chess_board[start_position + (8 - 1)]->get_piece_color() != this->get_piece_color()) {
             valid_new_positions.push_back(start_position + (8 - 1)); // move forward and left by 1
         }
     }
     if (start_position_row - 1 >= 0 && start_position_col + 1 < 8) {
-        if (!chess_board[start_position - (8 - 1)] && chess_board[start_position - (8 - 1)]->get_piece_color() != this->get_piece_color()) {
+        if (!chess_board[start_position - (8 - 1)] || chess_board[start_position - (8 - 1)]->get_piece_color() != this->get_piece_color()) {
             valid_new_positions.push_back(start_position - (8 - 1)); // move backwards and right by 1
         }
     }
     if (start_position_row - 1 >= 0 && start_position_col - 1 >= 0) {
-        if (!chess_board[start_position - (8 + 1)] && chess_board[start_position - (8 + 1)]->get_piece_color() != this->get_piece_color()) {
+        if (!chess_board[start_position - (8 + 1)] || chess_board[start_position - (8 + 1)]->get_piece_color() != this->get_piece_color()) {
             valid_new_positions.push_back(start_position - (8 + 1)); // moving backwards and left by 1
         }
     }
+    
+    // Check that none of the 'allowed' moves puts the king in a position to get taken
+    std::vector<int> all_opposition_possible_moves;
+    for (int i{} ; i < 8*8 ; i++) {
+        if (chess_board[i] && chess_board[i]->get_piece_color() != this->get_piece_color()) {
+            std::vector<int> opposition_piece_possible_moves;
+            if (chess_board[i]->get_symbol() == 'K') {
+                // In the case of a king, assume it can do all its possible moves, to avoid
+                // infinite loop trying to get king's possible moves
+                if (i/8 < 7) { opposition_piece_possible_moves.push_back(i + 8); }
+                if (i/8 > 0) { opposition_piece_possible_moves.push_back(i - 8); }
+                if (i%8 < 7) { opposition_piece_possible_moves.push_back(i + 1); }
+                if (i%8 > 0) { opposition_piece_possible_moves.push_back(i - 1); }
+            } else {
+                opposition_piece_possible_moves = chess_board[i]->get_valid_moves(i, chess_board);
+            }
+            
+            all_opposition_possible_moves.insert(std::end(all_opposition_possible_moves), 
+                                                 std::begin(opposition_piece_possible_moves),
+                                                 std::end(opposition_piece_possible_moves));
+        }
+    }
+    // Remove any of these opposition moves from the possible moves
+    auto move_found = [&all_opposition_possible_moves](const int& position) -> bool {
+        return std::find(all_opposition_possible_moves.begin(),
+                         all_opposition_possible_moves.end(), 
+                         position) != all_opposition_possible_moves.end();
+    };
+    valid_new_positions.erase(std::remove_if(valid_new_positions.begin(),
+                                             valid_new_positions.end(),
+                                             move_found), valid_new_positions.end());
 
+    
     return valid_new_positions;
 }

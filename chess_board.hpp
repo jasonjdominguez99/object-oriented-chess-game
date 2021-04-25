@@ -40,14 +40,12 @@ namespace brd {
     public:
         board();
         ~board() {
-            /*
             for (int i{0} ; i < 8 ; i++) {
                 for (int j{0} ; j < 8 ; j++) {
                     delete chess_board[i*8 + j];
                 }
             }
             delete[] chess_board;
-            */
             std::cout << "Destructor called." << std::endl;
         }
 

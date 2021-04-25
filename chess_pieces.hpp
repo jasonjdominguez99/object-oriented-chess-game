@@ -5,9 +5,13 @@
 // 
 // Author: Jason Dominguez
 // Created: 23/04/2021
-// Last modified: 24/04/2021
+// Last modified: 
+// 24/04/2021
 // - Added function to get all possible moves for 
 //   a given chess piece color
+// 25/04/2021
+// - Edited get valid moves functions to take a pointer to a chess piece pointer
+//   rather than chess board, to reduce interclass dependence
 
 
 #ifndef CHESS_PIECES_H
@@ -18,18 +22,11 @@
 #include <vector>
 
 
-namespace brd{
-    class board;
-}
-
-
 namespace pcs {
     enum color {white, black};
     std::string color_to_string(color chess_piece_color);
     color string_to_color(std::string chess_piece_color);
     color opposite_color(color chess_piece_color);
-
-    std::vector<int> get_all_possible_moves(color piece_color, const brd::board& chess_board);
 
     class chess_piece
     {
@@ -40,6 +37,7 @@ namespace pcs {
         color piece_color{};
         int piece_id{};
         char piece_symbol{};
+        bool has_moved{};
 
     public:
         // Constructors
@@ -47,19 +45,20 @@ namespace pcs {
             piece_color = white;
             piece_id = 0; // id of 0 used to denoted chess poece not present on board
             piece_symbol = ' ';
+            has_moved = false;
         }
         chess_piece(color white_or_black, int id, char symbol): 
-            piece_color{white_or_black}, piece_id{id}, piece_symbol{symbol} {}
+            piece_color{white_or_black}, piece_id{id}, piece_symbol{symbol}, has_moved{false} {}
         // Destructor
         virtual ~chess_piece(){}
 
         // Member functions
         color get_piece_color() { return piece_color; }
-        color get_piece_color() const { return piece_color; }
         int get_id() { return piece_id; }
-        int get_id() const { return piece_id; }
         char get_symbol() { return piece_symbol; }
-        char get_symbol() const { return piece_symbol; }
+        void has_been_moved() {
+            has_moved = true;
+        }
 
         chess_piece & operator=(chess_piece &chess_piece_to_copy) {
             if (&chess_piece_to_copy == this) return *this; // account for self-assignment
@@ -69,8 +68,10 @@ namespace pcs {
 
             return *this;
         }
-        virtual std::vector<int> get_valid_moves(int start_position, const brd::board& chess_board)=0;
+        virtual std::vector<int> get_valid_moves(int start_position, chess_piece** chess_board)=0;
     };
+
+    std::vector<int> get_all_possible_moves(color piece_color, chess_piece** chess_board);
 
     class pawn : public chess_piece
     {
@@ -85,7 +86,7 @@ namespace pcs {
         virtual ~pawn(){}
 
         // Member functions
-        std::vector<int> get_valid_moves(int start_position, const brd::board& chess_board);
+        std::vector<int> get_valid_moves(int start_position, chess_piece** chess_board);
     };
 
     class rook : public chess_piece
@@ -98,7 +99,7 @@ namespace pcs {
         virtual ~rook(){}
 
         // Member functions
-        std::vector<int> get_valid_moves(int start_position, const brd::board& chess_board);
+        std::vector<int> get_valid_moves(int start_position, chess_piece** chess_board);
     };
 
     class knight : public chess_piece
@@ -110,7 +111,7 @@ namespace pcs {
         // Destructor
         virtual ~knight(){}
 
-        std::vector<int> get_valid_moves(int start_position, const brd::board& chess_board);
+        std::vector<int> get_valid_moves(int start_position, chess_piece** chess_board);
     };
 
     class bishop : public chess_piece
@@ -122,7 +123,7 @@ namespace pcs {
         // Destructor
         virtual ~bishop(){}
 
-        std::vector<int> get_valid_moves(int start_position, const brd::board& chess_board);
+        std::vector<int> get_valid_moves(int start_position, chess_piece** chess_board);
     };
 
     class queen : public chess_piece
@@ -134,7 +135,7 @@ namespace pcs {
         // Destructor
         virtual ~queen(){}
 
-        std::vector<int> get_valid_moves(int start_position, const brd::board& chess_board);
+        std::vector<int> get_valid_moves(int start_position, chess_piece** chess_board);
     };
 
     class king : public chess_piece
@@ -149,7 +150,7 @@ namespace pcs {
         // Destructor
         virtual ~king(){}
 
-        std::vector<int> get_valid_moves(int start_position, const brd::board& chess_board);
+        std::vector<int> get_valid_moves(int start_position, chess_piece** chess_board);
     };
 }
 

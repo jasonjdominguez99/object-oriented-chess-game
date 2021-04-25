@@ -5,7 +5,8 @@
 // 
 // Author: Jason Dominguez
 // Created: 23/04/2021
-// Last modified: 24/04/2021 
+// Last modified: 
+// 24/04/2021 
 // - Labelling of board (letters and numbers) corrected
 // - Improved display of board with new letters and number
 //   and flipped to be 1 at bottom 8 at top

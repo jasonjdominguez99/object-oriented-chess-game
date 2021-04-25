@@ -5,24 +5,26 @@
 // 
 // Author: Jason Dominguez
 // Created: 23/04/2021
-// Last modified: 24/04/2021
+// Last modified: 
+// 24/04/2021
 // - Fixed error with checking for diagonal moves with king
 // - Added functionality to check if king will move into
 //   checkmate position (i.e. make sure it doesn't move somewhere
 //   where it can be captured)
 // - Added function to get all possible moves for 
-//   a give chess piece color
+//   a given chess piece color
+// 25/04/2021
+// - Edited get valid moves functions to take a pointer to a chess piece pointer
+//   rather than chess board, to reduce interclass dependence
 
 
 #include <vector>
 #include <iterator>
 #include <algorithm>
 #include "chess_pieces.hpp"
-#include "chess_board.hpp"
 
 
 using namespace pcs;
-using namespace brd;
 
 
 namespace pcs {
@@ -61,7 +63,7 @@ namespace pcs {
         }
     }
 
-    std::vector<int> get_all_possible_moves(color piece_color, const board& chess_board) {
+    std::vector<int> get_all_possible_moves(color piece_color, chess_piece** chess_board) {
         std::vector<int> all_possible_moves;
         for (int i{} ; i < 8*8 ; i++) {
             if (chess_board[i] && chess_board[i]->get_piece_color() == piece_color) {
@@ -87,8 +89,8 @@ namespace pcs {
     }
 }
 
-// Define functions to get valid move for chess pieces after defining the board class
-std::vector<int> pawn::get_valid_moves(int start_position, const board& chess_board) {
+// Define functions to get valid move for chess pieces
+std::vector<int> pawn::get_valid_moves(int start_position, chess_piece** chess_board) {
     int start_position_row{start_position/8};
     int start_position_col{start_position%8};
         
@@ -132,7 +134,7 @@ std::vector<int> pawn::get_valid_moves(int start_position, const board& chess_bo
     return valid_new_positions;
 }
 
-std::vector<int> rook::get_valid_moves(int start_position, const board& chess_board) {
+std::vector<int> rook::get_valid_moves(int start_position, chess_piece** chess_board) {
     int start_position_row{start_position/8};
     int start_position_col{start_position%8};
 
@@ -191,7 +193,7 @@ std::vector<int> rook::get_valid_moves(int start_position, const board& chess_bo
     return valid_new_positions;
 }
 
-std::vector<int> knight::get_valid_moves(int start_position, const board& chess_board) {
+std::vector<int> knight::get_valid_moves(int start_position, chess_piece** chess_board) {
     int start_position_row{start_position/8};
     int start_position_col{start_position%8};
         
@@ -256,7 +258,7 @@ std::vector<int> knight::get_valid_moves(int start_position, const board& chess_
     return valid_new_positions;
 }
 
-std::vector<int> bishop::get_valid_moves(int start_position, const board& chess_board) {
+std::vector<int> bishop::get_valid_moves(int start_position, chess_piece** chess_board) {
     int start_position_row{start_position/8};
     int start_position_col{start_position%8};
 
@@ -362,7 +364,7 @@ std::vector<int> bishop::get_valid_moves(int start_position, const board& chess_
     return valid_new_positions;
 }
 
-std::vector<int> queen::get_valid_moves(int start_position, const board& chess_board) {
+std::vector<int> queen::get_valid_moves(int start_position, chess_piece** chess_board) {
     int start_position_row{start_position/8};
     int start_position_col{start_position%8};
 
@@ -495,7 +497,7 @@ std::vector<int> queen::get_valid_moves(int start_position, const board& chess_b
     return valid_new_positions;
 }
 
-std::vector<int> king::get_valid_moves(int start_position, const board& chess_board) {
+std::vector<int> king::get_valid_moves(int start_position, chess_piece** chess_board) {
     int start_position_row{start_position/8};
     int start_position_col{start_position%8};
         

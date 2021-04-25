@@ -4,9 +4,14 @@
 // 
 // Author: Jason Dominguez
 // Created: 23/04/2021
-// Last modified: 24/04/2021
+// Last modified: 
+// 24/04/2021
 // - Added functionality to see if check has occurred
 // - Added functionality to see if checkmate has occurred
+// 25/04/2021
+// - Added functionality for game to end upon checkmate
+// - Added functionality to force player to move king 
+//   when in check
 
 
 #include <string>
@@ -54,25 +59,56 @@ int main() {
         board chess_board;
         std::cout << chess_board << std::endl;
 
-        bool game_has_ended = false;
+        bool check_on_opposition_king = false;
+        bool checkmate = false;
         player current_player = player_one;
-        while (!game_has_ended) {
-            player_turn(current_player, chess_board);
+        while (true) {
+            if (check_on_opposition_king) {
+                std::cout << "QUICK! You must move your must move your king!" << std::endl;
+                
+                int king_position_index{};
+                for (int i{} ; i < 8*8 ; i++) {
+                    if (chess_board[i] && 
+                        chess_board[i]->get_piece_color() == current_player.get_piece_color() &&
+                        chess_board[i]->get_symbol() == 'K') {
+                        
+                        king_position_index = i;
+                    }
+                }
+                std::vector<int> possible_moves{};
+                // Get the possible moves for the chosen piece
+                possible_moves = chess_board[king_position_index]->get_valid_moves(king_position_index, chess_board.get_board());
 
+                std::cout << "Here are the possible moves for this chess piece: " << std::endl;
+                std::vector<int>::iterator vector_begin{possible_moves.begin()};
+                std::vector<int>::iterator vector_end{possible_moves.end()};
+                std::vector<int>::iterator vector_iterator;
+                for (vector_iterator = vector_begin ; vector_iterator < vector_end ; ++vector_iterator) {
+                    std::cout << board_index_to_position(*vector_iterator) << std::endl;
+                }
+
+                std::cout << "To which of these positions do you want to move your piece?" << std::endl;
+                std::string end_position;
+                std::cin >> end_position;
+                int end_position_index = board_position_to_index(end_position);
+                chess_board.move_piece(king_position_index, end_position_index);
+            } else {
+                player_turn(current_player, chess_board);
+            }
+            
             std::cout << std::endl << chess_board << std::endl;
 
             // See if check has occured (this player can capture the opposition king on their next turn)
             std::vector<int> possible_next_moves;
-            possible_next_moves = get_all_possible_moves(current_player.get_piece_color(), chess_board);
+            possible_next_moves = get_all_possible_moves(current_player.get_piece_color(), chess_board.get_board());
             // Find if any of these moves will capture the opposition's king
-            bool check_on_opposition_king = std::find_if(possible_next_moves.begin(), possible_next_moves.end(),
-                                                         [&chess_board](int board_index) {
-                                                             if (chess_board[board_index]) {
-                                                                 return chess_board[board_index]->get_symbol() == 'K';
-                                                             }
-                                                         }) != possible_next_moves.end();
+            check_on_opposition_king = std::find_if(possible_next_moves.begin(), possible_next_moves.end(),
+                                                    [&chess_board](int board_index) {
+                                                        if (chess_board[board_index]) {
+                                                            return chess_board[board_index]->get_symbol() == 'K';
+                                                        }
+                                                    }) != possible_next_moves.end();
             // See if checkmate has occured (this player will capture the opposition king on their next turn)
-            bool checkmate{false};
             if (check_on_opposition_king) {
                 int opposition_king_board_index{};
                 for (int i{} ; i < 8*8 ; i++) {
@@ -84,7 +120,7 @@ int main() {
                     }
                 }
                 std::vector<int> opposition_king_possible_moves;
-                opposition_king_possible_moves = chess_board[opposition_king_board_index]->get_valid_moves(opposition_king_board_index, chess_board);
+                opposition_king_possible_moves = chess_board[opposition_king_board_index]->get_valid_moves(opposition_king_board_index, chess_board.get_board());
                 if (opposition_king_possible_moves.size() == 0) {
                     // Opposition king cannot escape getting captured
                     checkmate = true;
@@ -139,18 +175,12 @@ void player_turn(player chess_player, board& chess_board) {
 
     // Initialize to a poistion on chess board with opposite color of player
     int start_position_index{};
-    if (chess_player.get_piece_color() == white) {
-        start_position_index = 63;
-    } else {
-        start_position_index = 0;
-    }
     
     while (true) {
         std::vector<int> possible_moves{};
         while (possible_moves.size() == 0) {
-            while (chess_board[start_position_index]->get_piece_color() != chess_player.get_piece_color()) {
-                start_position_index = 16; // Set to a position with no chess piece
-                while (!chess_board[start_position_index]) {
+            do {
+                do {
                     std::cout << "Please enter the position of the chess piece you want to move: " ;
                     std::string start_position;
                     std::cin >> start_position;
@@ -159,20 +189,16 @@ void player_turn(player chess_player, board& chess_board) {
                     if (!chess_board[start_position_index]) {
                         std::cout << "Ummm... that's... not a chess piece...... Please try again..." << std::endl;
                     }
-                }
+                } while(!chess_board[start_position_index]);
                 if (chess_board[start_position_index]->get_piece_color() != chess_player.get_piece_color()) {
                     std::cout << "You can only move a " << color_to_string(chess_player.get_piece_color()) << " chess piece. You're not trying to cheat are you...?" << std::endl;
                 }
-            }
+            } while (chess_board[start_position_index]->get_piece_color() != chess_player.get_piece_color());
+
             // Get the possible moves for the chosen piece
-            possible_moves = chess_board[start_position_index]->get_valid_moves(start_position_index, chess_board);
+            possible_moves = chess_board[start_position_index]->get_valid_moves(start_position_index, chess_board.get_board());
             if (possible_moves.size() == 0) {
                 std::cout << "Sorry, this piece has no possible moves. Please try again..." << std::endl;
-                if (chess_player.get_piece_color() == white) {
-                    start_position_index = 63;
-                } else {
-                    start_position_index = 0;
-                }
             }
         }
 
@@ -189,12 +215,6 @@ void player_turn(player chess_player, board& chess_board) {
         std::cin >> piece_to_move_decision;
         if (piece_to_move_decision == "y") {
             break;
-        } else {
-            if (chess_player.get_piece_color() == white) {
-                start_position_index = 63;
-            } else {
-                start_position_index = 0;
-            }
         }
     }
 
@@ -204,4 +224,5 @@ void player_turn(player chess_player, board& chess_board) {
     int end_position_index = board_position_to_index(end_position);
 
     chess_board.move_piece(start_position_index, end_position_index);
+    chess_board[end_position_index]->has_been_moved();
 }

@@ -20,6 +20,7 @@
 
 #include <iostream>
 #include <vector>
+#include <memory>
 
 
 namespace pcs {
@@ -31,7 +32,7 @@ namespace pcs {
     class chess_piece
     {
         // Friend function for overloading the output operator
-        friend std::ostream & operator<<(std::ostream &output, const chess_piece *piece);
+        friend std::ostream & operator<<(std::ostream &output, std::shared_ptr<chess_piece> const& piece);
 
     protected:
         color piece_color{};
@@ -56,9 +57,7 @@ namespace pcs {
         color get_piece_color() { return piece_color; }
         int get_id() { return piece_id; }
         char get_symbol() { return piece_symbol; }
-        void has_been_moved() {
-            has_moved = true;
-        }
+        void has_been_moved() { has_moved = true; }
 
         chess_piece & operator=(chess_piece &chess_piece_to_copy) {
             if (&chess_piece_to_copy == this) return *this; // account for self-assignment
@@ -68,10 +67,10 @@ namespace pcs {
 
             return *this;
         }
-        virtual std::vector<int> get_valid_moves(int start_position, chess_piece** chess_board)=0;
+        virtual std::vector<int> get_valid_moves(int start_position, std::vector<std::shared_ptr<pcs::chess_piece>> chess_board)=0;
     };
 
-    std::vector<int> get_all_possible_moves(color piece_color, chess_piece** chess_board);
+    std::vector<int> get_all_possible_moves(color piece_color, std::vector<std::shared_ptr<pcs::chess_piece>> chess_board);
 
     class pawn : public chess_piece
     {
@@ -86,7 +85,7 @@ namespace pcs {
         virtual ~pawn(){}
 
         // Member functions
-        std::vector<int> get_valid_moves(int start_position, chess_piece** chess_board);
+        std::vector<int> get_valid_moves(int start_position, std::vector<std::shared_ptr<pcs::chess_piece>> chess_board);
     };
 
     class rook : public chess_piece
@@ -99,7 +98,7 @@ namespace pcs {
         virtual ~rook(){}
 
         // Member functions
-        std::vector<int> get_valid_moves(int start_position, chess_piece** chess_board);
+        std::vector<int> get_valid_moves(int start_position, std::vector<std::shared_ptr<pcs::chess_piece>> chess_board);
     };
 
     class knight : public chess_piece
@@ -111,7 +110,7 @@ namespace pcs {
         // Destructor
         virtual ~knight(){}
 
-        std::vector<int> get_valid_moves(int start_position, chess_piece** chess_board);
+        std::vector<int> get_valid_moves(int start_position, std::vector<std::shared_ptr<pcs::chess_piece>> chess_board);
     };
 
     class bishop : public chess_piece
@@ -123,7 +122,7 @@ namespace pcs {
         // Destructor
         virtual ~bishop(){}
 
-        std::vector<int> get_valid_moves(int start_position, chess_piece** chess_board);
+        std::vector<int> get_valid_moves(int start_position, std::vector<std::shared_ptr<pcs::chess_piece>> chess_board);
     };
 
     class queen : public chess_piece
@@ -135,7 +134,7 @@ namespace pcs {
         // Destructor
         virtual ~queen(){}
 
-        std::vector<int> get_valid_moves(int start_position, chess_piece** chess_board);
+        std::vector<int> get_valid_moves(int start_position, std::vector<std::shared_ptr<pcs::chess_piece>> chess_board);
     };
 
     class king : public chess_piece
@@ -150,7 +149,7 @@ namespace pcs {
         // Destructor
         virtual ~king(){}
 
-        std::vector<int> get_valid_moves(int start_position, chess_piece** chess_board);
+        std::vector<int> get_valid_moves(int start_position, std::vector<std::shared_ptr<pcs::chess_piece>> chess_board);
     };
 }
 

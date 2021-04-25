@@ -10,15 +10,20 @@
 // - Labelling of board (letters and numbers) corrected
 // - Improved display of board with new letters and number
 //   and flipped to be 1 at bottom 8 at top
+// 25/04/2021
+// - Changed raw pointers to smart shared_ptr pointer
+// - Started using vector for chess board rather than array
+// - Implemented using move semantics when moving chess
+//   pieces
 
 
 #include <sstream>
+#include <memory>
 #include "chess_board.hpp"
 #include "chess_pieces.hpp"
 
 
 using namespace brd;
-using namespace pcs;
 
 
 namespace brd {
@@ -50,7 +55,7 @@ namespace brd {
         return output;
     }
 
-    chess_piece* board::operator[](int idx) const { 
+    std::shared_ptr<pcs::chess_piece> board::operator[](int idx) const { 
         // Check for out of bound index
         if (idx > 63 && idx >= 0) {
             std::cerr << "Board index out of range, exiting.";
@@ -68,20 +73,21 @@ namespace brd {
         row_input >> row_number;
         row_number -= 1;
 
-        if (col_letter == 'A') return row_number*8 + 0;
-        if (col_letter == 'B') return row_number*8 + 1;
-        if (col_letter == 'C') return row_number*8 + 2;
-        if (col_letter == 'D') return row_number*8 + 3;
-        if (col_letter == 'E') return row_number*8 + 4;
-        if (col_letter == 'F') return row_number*8 + 5;
-        if (col_letter == 'G') return row_number*8 + 6;
-        if (col_letter == 'H') return row_number*8 + 7;
-        /*
+        int position_index{};
+        if (col_letter == 'A') { position_index = row_number*8 + 0; }
+        else if (col_letter == 'B') { position_index = row_number*8 + 1; }
+        else if (col_letter == 'C') { position_index = row_number*8 + 2; }
+        else if (col_letter == 'D') { position_index = row_number*8 + 3; }
+        else if (col_letter == 'E') { position_index = row_number*8 + 4; }
+        else if (col_letter == 'F') { position_index = row_number*8 + 5; }
+        else if (col_letter == 'G') { position_index = row_number*8 + 6; }
+        else if (col_letter == 'H') { position_index = row_number*8 + 7; }
         else {
             std::cerr << "Invalid board position.";
             exit(-1);
         }
-        */
+
+        return position_index;
     }
 
     std::string board_index_to_position(int position_index) {
@@ -89,20 +95,18 @@ namespace brd {
         int column_number = position_index%8 + 1;
 
         std::string position;
-        if (column_number == 1) position = "A";
-        if (column_number == 2) position = "B";
-        if (column_number == 3) position = "C";
-        if (column_number == 4) position = "D";
-        if (column_number == 5) position = "E";
-        if (column_number == 6) position = "F";
-        if (column_number == 7) position = "G";
-        if (column_number == 8) position = "H";
-        /*
+        if (column_number == 1) { position = "A"; }
+        else if (column_number == 2) { position = "B"; }
+        else if (column_number == 3) { position = "C"; }
+        else if (column_number == 4) { position = "D"; }
+        else if (column_number == 5) { position = "E"; }
+        else if (column_number == 6) { position = "F"; }
+        else if (column_number == 7) { position = "G"; }
+        else if (column_number == 8) { position = "H"; }
         else {
             std::cerr << "Invalid board position.";
             exit(-1);
         }
-        */
 
         std::stringstream position_row;
         position_row << row_number;
@@ -118,50 +122,50 @@ namespace brd {
 board::board() {
     // Initialize white pieces on chess board
     // starting from bottom left to top right
-    chess_board[0] = new rook(white, 0);
-    chess_board[1] = new knight(white, 1);
-    chess_board[2] = new bishop(white, 2);
-    chess_board[3] = new queen(white, 3);
-    chess_board[4] = new king(white, 4);
-    chess_board[5] = new bishop(white, 5);
-    chess_board[6] = new knight(white, 6);
-    chess_board[7] = new rook(white, 7);
+    chess_board.push_back(std::make_shared<pcs::rook>(pcs::rook(pcs::white, 0)));
+    chess_board.push_back(std::make_shared<pcs::knight>(pcs::knight(pcs::white, 1)));
+    chess_board.push_back(std::make_shared<pcs::bishop>(pcs::bishop(pcs::white, 2)));
+    chess_board.push_back(std::make_shared<pcs::queen>(pcs::queen(pcs::white, 3)));
+    chess_board.push_back(std::make_shared<pcs::king>(pcs::king(pcs::white, 4)));
+    chess_board.push_back(std::make_shared<pcs::bishop>(pcs::bishop(pcs::white, 5)));
+    chess_board.push_back(std::make_shared<pcs::knight>(pcs::knight(pcs::white, 6)));
+    chess_board.push_back(std::make_shared<pcs::rook>(pcs::rook(pcs::white, 7)));
 
     for (size_t i{1*8} ; i < 2*8 ; i++) {
-        chess_board[i] = new pawn(white, i);
+        chess_board.push_back(std::make_shared<pcs::pawn>(pcs::pawn(pcs::white, i)));
     }
 
     // Initialize unoccupied chess board squares
     // rows 3,4,5,6 (array elements 16-48)
     for (size_t i{2*8} ; i < 6*8 ; i++) {
-        chess_board[i] = nullptr; 
+        chess_board.push_back(std::shared_ptr<pcs::chess_piece>{nullptr}); 
     }
 
     // Initialize black pieces on chess board
     for (size_t i{6*8} ; i < 7*8 ; i++) {
-        chess_board[i] = new pawn(black, i);
+        chess_board.push_back(std::make_shared<pcs::pawn>(pcs::pawn(pcs::black, i)));
     }
         
-    chess_board[7*8] = new rook(black, 7*8);
-    chess_board[7*8 + 1] = new knight(black, 7*8 + 1);
-    chess_board[7*8 + 2] = new bishop(black, 7*8 + 2);
-    chess_board[7*8 + 3] = new queen(black, 7*8 + 3);
-    chess_board[7*8 + 4] = new king(black, 7*8 + 4);
-    chess_board[7*8 + 5] = new bishop(black, 7*8 + 5);
-    chess_board[7*8 + 6] = new knight(black, 7*8 + 6);
-    chess_board[7*8 + 7] = new rook(black, 7*8 + 7);
+    chess_board.push_back(std::make_shared<pcs::rook>(pcs::rook(pcs::black, 7*8)));
+    chess_board.push_back(std::make_shared<pcs::knight>(pcs::knight(pcs::black, 7*8 + 1)));
+    chess_board.push_back(std::make_shared<pcs::bishop>(pcs::bishop(pcs::black, 7*8 + 2)));
+    chess_board.push_back(std::make_shared<pcs::queen>(pcs::queen(pcs::black, 7*8 + 3)));
+    chess_board.push_back(std::make_shared<pcs::king>(pcs::king(pcs::black, 7*8 + 4)));
+    chess_board.push_back(std::make_shared<pcs::bishop>(pcs::bishop(pcs::black, 7*8 + 5)));
+    chess_board.push_back(std::make_shared<pcs::knight>(pcs::knight(pcs::black, 7*8 + 6)));
+    chess_board.push_back(std::make_shared<pcs::rook>(pcs::rook(pcs::black, 7*8 + 7)));
 }
 
 void board::move_piece(int initial_position, int final_position) {
     if (!chess_board[final_position]) {
         // Final position on chess board is empty
-        chess_board[final_position] = &*chess_board[initial_position];
+        chess_board[final_position] = std::move(chess_board[initial_position]);
     } else {
         // Final position has a chess piece already there
         // so remove it from the board
-        removed_chess_pieces.push_back(chess_board[final_position]);
-        chess_board[final_position] = &*chess_board[initial_position];
+        //removed_chess_pieces.push_back(chess_board[final_position]);
+        chess_board[final_position] = std::move(chess_board[initial_position]);
     }
     // Make sure that the initial position on the board is now empty
-    chess_board[initial_position] = nullptr;
+    //chess_board[initial_position] = std::unique_ptr<pcs::chess_piece>{nullptr};
 }

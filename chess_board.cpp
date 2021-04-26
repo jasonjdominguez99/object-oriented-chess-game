@@ -15,6 +15,8 @@
 // - Started using vector for chess board rather than array
 // - Implemented using move semantics when moving chess
 //   pieces
+// 26/04/2021
+// - Simplified move_piece method by removing uneccessary if-else
 
 
 #include <sstream>
@@ -157,6 +159,8 @@ board::board() {
 }
 
 void board::move_piece(int initial_position, int final_position) {
+    chess_board[final_position] = std::move(chess_board[initial_position]);
+    /*
     if (!chess_board[final_position]) {
         // Final position on chess board is empty
         chess_board[final_position] = std::move(chess_board[initial_position]);
@@ -166,6 +170,5 @@ void board::move_piece(int initial_position, int final_position) {
         //removed_chess_pieces.push_back(chess_board[final_position]);
         chess_board[final_position] = std::move(chess_board[initial_position]);
     }
-    // Make sure that the initial position on the board is now empty
-    //chess_board[initial_position] = std::unique_ptr<pcs::chess_piece>{nullptr};
+    */
 }

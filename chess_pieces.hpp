@@ -12,6 +12,10 @@
 // 25/04/2021
 // - Edited get valid moves functions to take a pointer to a chess piece pointer
 //   rather than chess board, to reduce interclass dependence
+// - Changed raw pointers to smart shared_ptr pointer
+// 26/04/2021
+// - Removed repeated has_moved attribute from derived chess_piece classes
+//   which resulted in pawns being able to move two forward all the time
 
 
 #ifndef CHESS_PIECES_H
@@ -74,9 +78,6 @@ namespace pcs {
 
     class pawn : public chess_piece
     {
-    private:
-        bool has_moved{false};
-    
     public:
         // Constructors
         pawn() : chess_piece() {}
@@ -139,9 +140,6 @@ namespace pcs {
 
     class king : public chess_piece
     {
-    private:
-        bool has_moved{false};
-    
     public:
         // Constructors
         king() : chess_piece() {}

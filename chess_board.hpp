@@ -7,6 +7,9 @@
 // Last modified: 
 // 24/04/2021
 // - Added function to return the chess board
+// 25/04/2021
+// - Changed raw pointers to smart shared_ptr pointer
+// - Started using vector for chess board rather than array
 
 
 #ifndef CHESS_BOARD_H

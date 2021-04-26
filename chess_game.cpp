@@ -64,7 +64,7 @@ int main() {
         player current_player = player_one;
         while (true) {
             if (check_on_opposition_king) {
-                std::cout << "QUICK! You must move your must move your king!" << std::endl;
+                std::cout << "QUICK! " << current_player.get_name() << ", you must move your must move your king!" << std::endl;
                 
                 int king_position_index{};
                 for (int i{} ; i < 8*8 ; i++) {
@@ -92,6 +92,7 @@ int main() {
                 std::cin >> end_position;
                 int end_position_index = board_position_to_index(end_position);
                 chess_board.move_piece(king_position_index, end_position_index);
+                chess_board[end_position_index]->has_been_moved();
             } else {
                 player_turn(current_player, chess_board);
             }
@@ -103,9 +104,9 @@ int main() {
             possible_next_moves = get_all_possible_moves(current_player.get_piece_color(), chess_board.get_board());
             // Find if any of these moves will capture the opposition's king
             check_on_opposition_king = std::find_if(possible_next_moves.begin(), possible_next_moves.end(),
-                                                    [&chess_board](int board_index) {
+                                                    [&chess_board, &current_player](int board_index) {
                                                         if (chess_board[board_index]) {
-                                                            return chess_board[board_index]->get_symbol() == 'K';
+                                                            return chess_board[board_index]->get_symbol() == 'K' && chess_board[board_index]->get_piece_color() != current_player.get_piece_color();
                                                         }
                                                     }) != possible_next_moves.end();
             // See if checkmate has occured (this player will capture the opposition king on their next turn)

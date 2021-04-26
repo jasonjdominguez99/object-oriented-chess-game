@@ -16,6 +16,11 @@
 // 25/04/2021
 // - Edited get valid moves functions to take a pointer to a chess piece pointer
 //   rather than chess board, to reduce interclass dependence
+// - Changed raw pointers to smart shared_ptr pointer
+// - Started using vector for chess board rather than array
+// 26/04/2021
+// - Fix bug with king being allowed to capture a piece which would
+//   lead to it being captured
 
 
 #include <vector>
@@ -552,18 +557,38 @@ std::vector<int> king::get_valid_moves(int start_position, std::vector<std::shar
         }
     }
     
-    // Check that none of the 'allowed' moves puts the king in a position to get taken
-    std::vector<int> all_opposition_possible_moves;
-    all_opposition_possible_moves = get_all_possible_moves(opposite_color(this->get_piece_color()), chess_board);
-    // Remove any of these opposition moves from the possible moves
-    auto move_found = [&all_opposition_possible_moves](const int& position) -> bool {
-        return std::find(all_opposition_possible_moves.begin(),
-                         all_opposition_possible_moves.end(), 
-                         position) != all_opposition_possible_moves.end();
-    };
-    valid_new_positions.erase(std::remove_if(valid_new_positions.begin(),
+    // Check that none of the 'allowed' moves puts the king in a position to get captured
+    std::vector<int>::iterator first_new_position{valid_new_positions.begin()};
+    std::vector<int>::iterator last_new_position{valid_new_positions.end()};
+    std::vector<int>::iterator possible_final_position;
+    std::vector<int> moves_to_remove;
+    for (possible_final_position = first_new_position ; possible_final_position < last_new_position ; ++possible_final_position) {
+        // Make each of the possible king moves on a copy of the current chess board
+        std::vector<std::shared_ptr<pcs::chess_piece>> chess_board_after_possible_next_move{chess_board};
+
+        chess_board_after_possible_next_move[*possible_final_position] = std::move(chess_board_after_possible_next_move[start_position]);
+        chess_board_after_possible_next_move[*possible_final_position]->has_been_moved();
+
+        std::vector<int> opposition_possible_moves = get_all_possible_moves(opposite_color(this->get_piece_color()), chess_board_after_possible_next_move);
+
+        // If this possible final move for the king was found in possible opposition moves then
+        // it can be captured, therefore we will remove this from possible moves for this king
+        if (std::find(opposition_possible_moves.begin(), 
+                      opposition_possible_moves.end(),
+                      *possible_final_position) != opposition_possible_moves.end()) {
+            
+            moves_to_remove.push_back(*possible_final_position);
+        }
+    }  
+    
+    // Remove this possible position for the king, if found in opposition possible moves
+    valid_new_positions.erase(std::remove_if(valid_new_positions.begin(), 
                                              valid_new_positions.end(),
-                                             move_found), valid_new_positions.end());
+                                             [&moves_to_remove](const int& position) -> bool {
+                                                 return std::find(moves_to_remove.begin(),
+                                                                  moves_to_remove.end(),
+                                                                  position) != moves_to_remove.end();
+                                             }), valid_new_positions.end());
 
     
     return valid_new_positions;

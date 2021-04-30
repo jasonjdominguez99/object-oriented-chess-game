@@ -21,12 +21,19 @@
 // 26/04/2021
 // - Fix bug with king being allowed to capture a piece which would
 //   lead to it being captured
+// 30/04/2021
+// - Restructured entire code to include chess_game class
+//   still capable of the same functionality, but now
+//   able to start on chess engine
+// - Fixed bug with knight giving incorrect possible moves which
+//   when out of range of the board
+// - Possible move functions now don't consider whether king is moved
+//   into check, that it done in chess_game class
 
 
 #include <vector>
 #include <memory>
 #include <iterator>
-#include <algorithm>
 #include "chess_pieces.hpp"
 
 
@@ -74,6 +81,7 @@ namespace pcs {
         for (int i{} ; i < 8*8 ; i++) {
             if (chess_board[i] && chess_board[i]->get_piece_color() == piece_color) {
                 std::vector<int> piece_possible_moves;
+                /*
                 if (chess_board[i]->get_symbol() == 'K') {
                     // In the case of a king, assume it can do all its possible moves, to avoid
                     // infinite loop trying to get king's possible moves
@@ -84,6 +92,8 @@ namespace pcs {
                 } else {
                     piece_possible_moves = chess_board[i]->get_valid_moves(i, chess_board);
                 }
+                */
+                piece_possible_moves = chess_board[i]->get_valid_moves(i, chess_board);
             
                 all_possible_moves.insert(std::end(all_possible_moves), 
                                           std::begin(piece_possible_moves),
@@ -212,12 +222,12 @@ std::vector<int> knight::get_valid_moves(int start_position, std::vector<std::sh
     if (start_position_row + 2 < 8) {
         if (start_position_col + 1 < 8) {
             if (!chess_board[start_position + (2*8 + 1)] || chess_board[start_position + (2*8 + 1)]->get_piece_color() != this->get_piece_color()) {
-                valid_new_positions.push_back(start_position + (2*8 + 1)); // move forward 2 and right 1
+                valid_new_positions.push_back(start_position + (2*8 + 1)); // move up 2 and right 1
             }
         }
         if (start_position_col - 1 >= 0) {
             if (!chess_board[start_position + (2*8 - 1)] || chess_board[start_position + (2*8 - 1)]->get_piece_color() != this->get_piece_color()) {
-                valid_new_positions.push_back(start_position + (2*8 - 1)); // move forward 2 and left 1
+                valid_new_positions.push_back(start_position + (2*8 - 1)); // move up 2 and left 1
             }
         }
     }
@@ -225,12 +235,12 @@ std::vector<int> knight::get_valid_moves(int start_position, std::vector<std::sh
     if (start_position_row + 1 < 8) {
         if (start_position_col + 2 < 8) {
             if (!chess_board[start_position + (8 + 2)] || chess_board[start_position + (8 + 2)]->get_piece_color() != this->get_piece_color()) {
-                valid_new_positions.push_back(start_position + (8 + 2)); // move forward 1 and right 2
+                valid_new_positions.push_back(start_position + (8 + 2)); // move up 1 and right 2
             }
         }
         if (start_position_col - 2 >= 0) {
             if (!chess_board[start_position + (8 - 2)] || chess_board[start_position + (8 - 2)]->get_piece_color() != this->get_piece_color()) {
-                valid_new_positions.push_back(start_position + (8 - 2)); // move forward 1 and left 2
+                valid_new_positions.push_back(start_position + (8 - 2)); // move up 1 and left 2
             }
         }
     }
@@ -238,12 +248,12 @@ std::vector<int> knight::get_valid_moves(int start_position, std::vector<std::sh
     if (start_position_row - 1 >= 0) {
         if (start_position_col + 2 < 8) {
             if (!chess_board[start_position + (-8 + 2)] || chess_board[start_position + (-8 + 2)]->get_piece_color() != this->get_piece_color()) {
-                valid_new_positions.push_back(start_position + (8 + 2)); // move forward 1 and right 2
+                valid_new_positions.push_back(start_position + (-8 + 2)); // move down 1 and right 2
             }
         }
         if (start_position_col - 2 >= 0) {
             if (!chess_board[start_position + (-8 - 2)] || chess_board[start_position + (-8 - 2)]->get_piece_color() != this->get_piece_color()) {
-                valid_new_positions.push_back(start_position + (-8 - 2)); // move forward 1 and left 2
+                valid_new_positions.push_back(start_position + (-8 - 2)); // move down 1 and left 2
             }
         }
     }
@@ -251,12 +261,12 @@ std::vector<int> knight::get_valid_moves(int start_position, std::vector<std::sh
     if (start_position_row - 2 >= 0) {
         if (start_position_col + 1 < 8) {
             if (!chess_board[start_position + (-2*8 + 1)] || chess_board[start_position + (-2*8 + 1)]->get_piece_color() != this->get_piece_color()) {
-                valid_new_positions.push_back(start_position + (-2*8 + 1)); // move forward 2 and right 1
+                valid_new_positions.push_back(start_position + (-2*8 + 1)); // move down 2 and right 1
             }
         }
         if (start_position_col - 1 >= 0) {
             if (!chess_board[start_position + (-2*8 - 1)] || chess_board[start_position + (-2*8 - 1)]->get_piece_color() != this->get_piece_color()) {
-                valid_new_positions.push_back(start_position + (-2*8 - 1)); // move forward 2 and left 1
+                valid_new_positions.push_back(start_position + (-2*8 - 1)); // move down 2 and left 1
             }
         }
     }
@@ -556,40 +566,6 @@ std::vector<int> king::get_valid_moves(int start_position, std::vector<std::shar
             valid_new_positions.push_back(start_position - (8 + 1)); // moving backwards and left by 1
         }
     }
-    
-    // Check that none of the 'allowed' moves puts the king in a position to get captured
-    std::vector<int>::iterator first_new_position{valid_new_positions.begin()};
-    std::vector<int>::iterator last_new_position{valid_new_positions.end()};
-    std::vector<int>::iterator possible_final_position;
-    std::vector<int> moves_to_remove;
-    for (possible_final_position = first_new_position ; possible_final_position < last_new_position ; ++possible_final_position) {
-        // Make each of the possible king moves on a copy of the current chess board
-        std::vector<std::shared_ptr<pcs::chess_piece>> chess_board_after_possible_next_move{chess_board};
-
-        chess_board_after_possible_next_move[*possible_final_position] = std::move(chess_board_after_possible_next_move[start_position]);
-        chess_board_after_possible_next_move[*possible_final_position]->has_been_moved();
-
-        std::vector<int> opposition_possible_moves = get_all_possible_moves(opposite_color(this->get_piece_color()), chess_board_after_possible_next_move);
-
-        // If this possible final move for the king was found in possible opposition moves then
-        // it can be captured, therefore we will remove this from possible moves for this king
-        if (std::find(opposition_possible_moves.begin(), 
-                      opposition_possible_moves.end(),
-                      *possible_final_position) != opposition_possible_moves.end()) {
-            
-            moves_to_remove.push_back(*possible_final_position);
-        }
-    }  
-    
-    // Remove this possible position for the king, if found in opposition possible moves
-    valid_new_positions.erase(std::remove_if(valid_new_positions.begin(), 
-                                             valid_new_positions.end(),
-                                             [&moves_to_remove](const int& position) -> bool {
-                                                 return std::find(moves_to_remove.begin(),
-                                                                  moves_to_remove.end(),
-                                                                  position) != moves_to_remove.end();
-                                             }), valid_new_positions.end());
-
     
     return valid_new_positions;
 }

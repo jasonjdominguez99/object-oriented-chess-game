@@ -16,6 +16,10 @@
 // 26/04/2021
 // - Removed repeated has_moved attribute from derived chess_piece classes
 //   which resulted in pawns being able to move two forward all the time
+// 30/04/2021
+// - Restructured entire code to include chess_game class
+//   still capable of the same functionality, but now
+//   able to start on chess engine
 
 
 #ifndef CHESS_PIECES_H

@@ -44,10 +44,10 @@ int main() {
     std::cout << player_one.get_name() << " your color is " << color_to_string(player_one.get_piece_color()) << std::endl;
 
     std::shared_ptr<player> player_two;
-    std::cout << "Player 2" << std::endl;
     if (number_of_players == 1) {
         player_two = std::make_shared<chess_bot>(opposite_color(player_one.get_piece_color()));
     } else {
+        std::cout << "Player 2" << std::endl;
         player_two = std::make_shared<human_player>(opposite_color(player_one.get_piece_color()));
         player_two->ask_for_name();
         std::cout << player_two->get_name() << " your color is " << color_to_string(player_two->get_piece_color()) << std::endl;

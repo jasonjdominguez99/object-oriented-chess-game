@@ -16,6 +16,7 @@
 
 
 #include <string>
+#include <random>
 #include "chess_pieces.hpp"
 #include "chess_board.hpp"
 
@@ -56,17 +57,6 @@ namespace plr {
         std::string get_name() { return name; }
         color get_piece_color() { return piece_color; }
         bool get_is_human() { return is_human; }
-
-        /*
-        player & operator=(player &player_to_copy) {
-            if(&player_to_copy == this) return *this; // account for self-assignment
-         
-            name = player_to_copy.name; 
-            piece_color = player_to_copy.piece_color;
-
-            return *this;
-        }
-        */
     };
 
     class human_player : public player
@@ -85,6 +75,9 @@ namespace plr {
 
     class chess_bot : public player
     {
+    private:
+        std::random_device rd;
+    
     public:
         // Constructors
         chess_bot(color player_color) : player("ChessBot", player_color, false) {} 

@@ -9,10 +9,14 @@
 // - Restructured entire code to include chess_game class
 //   still capable of the same functionality, but now
 //   able to start on chess engine
+// 01/05/2021
+// - Added chess_bot functionality to randomly select
+//   possible moves
 
 
 #include <algorithm>
 #include <utility>
+#include <random>
 #include "player_class.hpp"
 #include "chess_pieces.hpp"
 #include "chess_board.hpp"
@@ -107,6 +111,8 @@ std::pair<int, int> human_player::choose_move(board& chess_board) {
     std::cout << name << "'s turn..." << std::endl;
 
     int start_position_index{};
+    // Make sure player chooses one of their color pieces which has 
+    // possible moves and not a blank chess board tile
     while (true) {
         std::vector<int> possible_moves{};
         while (possible_moves.size() == 0) {
@@ -195,7 +201,73 @@ std::pair<int, int> human_player::choose_move(board& chess_board) {
 }
 
 std::pair<int, int> chess_bot::choose_move(board& chess_board) {
-    std::cout << "Choose move" << std::endl;
+    std::cout << "ChessBot's turn..." << std::endl;
+    std::cout << "Choosing move..." << std::endl;
 
-    return std::pair<int, int>(1, 2);    
+    // Randomly choose one of their color pieces which has 
+    // possible moves and not a blank chess board tile
+    std::vector<std::pair<int, std::vector<int>>> all_possible_moves{};
+        
+    for (int i{} ; i < 8*8 ; i++) {
+        if (chess_board[i] && chess_board[i]->get_piece_color() == this->piece_color) {
+            std::vector<int> possible_final_positions;
+            possible_final_positions = chess_board[i]->get_valid_moves(i, chess_board.get_board());
+
+            if (possible_final_positions.size() == 0) {
+                continue;
+            }
+
+            // For a king, must make sure that it is not being moved into check position
+            if (chess_board[i]->get_symbol() == 'K') {
+                std::vector<int>::iterator first_new_position{possible_final_positions.begin()};
+                std::vector<int>::iterator last_new_position{possible_final_positions.end()};
+                std::vector<int>::iterator possible_final_position;
+                std::vector<int> moves_to_remove;
+                for (possible_final_position = first_new_position ; possible_final_position < last_new_position ; ++possible_final_position) {
+                    // Make each of the possible king moves on a copy of the current chess board
+                    std::vector<std::shared_ptr<pcs::chess_piece>> chess_board_after_possible_next_move{chess_board.get_board()};
+
+                    chess_board_after_possible_next_move[*possible_final_position] = std::move(chess_board_after_possible_next_move[i]);
+                    chess_board_after_possible_next_move[*possible_final_position]->has_been_moved();
+
+                    std::vector<int> opposition_possible_moves = get_all_possible_moves(opposite_color(this->get_piece_color()), chess_board_after_possible_next_move);
+
+                    // If this possible final move for the king was found in possible opposition moves then
+                    // it can be captured, therefore we will remove this from possible moves for this king
+                    if (std::find(opposition_possible_moves.begin(), 
+                                  opposition_possible_moves.end(),
+                                  *possible_final_position) != opposition_possible_moves.end()) {
+            
+                        moves_to_remove.push_back(*possible_final_position);
+                    }
+                }  
+    
+                // Remove this possible position for the king, if found in opposition possible moves
+                possible_final_positions.erase(std::remove_if(possible_final_positions.begin(), 
+                                                              possible_final_positions.end(),
+                                                              [&moves_to_remove](const int& position) -> bool {
+                                                                  return std::find(moves_to_remove.begin(),
+                                                                                   moves_to_remove.end(),
+                                                                                   position) != moves_to_remove.end();
+                                                              }), possible_final_positions.end());
+            }
+            
+            std::pair<int, std::vector<int>> possible_moves = std::pair<int, std::vector<int>>(i, possible_final_positions);
+            all_possible_moves.push_back(possible_moves);
+        }
+    }
+
+    // Select random move from possible moves
+    std::default_random_engine engine(rd());
+    std::uniform_int_distribution<int> distr(0, all_possible_moves.size() - 1);
+    int random_start_position_index = distr(engine);
+
+    int chosen_start_position = all_possible_moves[random_start_position_index].first;
+
+    std::uniform_int_distribution<int> distr2(0, all_possible_moves[random_start_position_index].second.size() - 1);
+    int random_final_position_index = distr2(engine);
+    
+    int chosen_final_position = all_possible_moves[random_start_position_index].second[random_final_position_index];
+
+    return std::pair<int, int>(chosen_start_position, chosen_final_position);
 }

@@ -1,6 +1,6 @@
 // OOPCpp_Final_Assignment_Chess/chess_game.cpp
 //
-// Source file for chess game class
+// Header file for chess game class
 // 
 // Author: Jason Dominguez
 // Created: 27/04/2021

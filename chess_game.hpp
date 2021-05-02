@@ -39,6 +39,11 @@ namespace cgm {
         game_status status;
         //std::vector<std::string> moves_played;
 
+        static int games_played;
+        static int player_one_wins;
+        static int player_two_wins;
+        static int draws;
+
     public:
         // Constructors
         chess_game(plr::human_player player_one, std::shared_ptr<plr::player> player_two) :
@@ -59,7 +64,10 @@ namespace cgm {
 
         void get_next_player_ready();
         void current_player_make_a_move(bool in_check);
+        void promote_pawn_if_possible();
         void update_game_status();
+        void game_over();
+        static void display_stats(std::string player_one_name, std::string player_two_name);
     };
 }
 

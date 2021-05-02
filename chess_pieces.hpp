@@ -20,6 +20,9 @@
 // - Restructured entire code to include chess_game class
 //   still capable of the same functionality, but now
 //   able to start on chess engine
+// 02/05/2021
+// - Added private member variable to pawn class to say whether it can be
+//   captured via en passant
 
 
 #ifndef CHESS_PIECES_H
@@ -47,6 +50,7 @@ namespace pcs {
         int piece_id{};
         char piece_symbol{};
         bool has_moved{};
+        bool en_passant_is_possible{};
 
     public:
         // Constructors
@@ -55,6 +59,7 @@ namespace pcs {
             piece_id = 0; // id of 0 used to denoted chess poece not present on board
             piece_symbol = ' ';
             has_moved = false;
+            en_passant_is_possible = false;
         }
         chess_piece(color white_or_black, int id, char symbol): 
             piece_color{white_or_black}, piece_id{id}, piece_symbol{symbol}, has_moved{false} {}
@@ -65,7 +70,10 @@ namespace pcs {
         color get_piece_color() { return piece_color; }
         int get_id() { return piece_id; }
         char get_symbol() { return piece_symbol; }
+        bool get_has_moved() { return has_moved; }
         void has_been_moved() { has_moved = true; }
+        bool is_en_passant_possible() { return en_passant_is_possible; }
+        void set_en_passant_possibility(bool en_passant_possibility) { en_passant_is_possible = en_passant_possibility; }
 
         chess_piece & operator=(chess_piece &chess_piece_to_copy) {
             if (&chess_piece_to_copy == this) return *this; // account for self-assignment

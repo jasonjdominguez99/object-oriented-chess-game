@@ -9,6 +9,9 @@
 // - Restructured entire code to include chess_game class
 //   still capable of the same functionality, but now
 //   able to start on chess engine
+// 01/05/2021
+// - Added chess_bot functionality to randomly select
+//   possible moves using random seed
 
 
 #ifndef PLAYER_H
@@ -16,7 +19,6 @@
 
 
 #include <string>
-#include <random>
 #include "chess_pieces.hpp"
 #include "chess_board.hpp"
 
@@ -50,7 +52,7 @@ namespace plr {
 
         // Member functions
         virtual std::pair<int, int> choose_move(board& chess_board)=0;
-        std::pair<int, int> choose_move_for_king(board& chess_board);
+        virtual std::pair<int, int> choose_move_for_king(board& chess_board)=0;
         void ask_for_name();
         void ask_for_color();
 
@@ -71,13 +73,11 @@ namespace plr {
 
         // Member functions
         std::pair<int, int> choose_move(board& chess_board);
+        std::pair<int, int> choose_move_for_king(board& chess_board);
     };
 
     class chess_bot : public player
     {
-    private:
-        std::random_device rd;
-    
     public:
         // Constructors
         chess_bot(color player_color) : player("ChessBot", player_color, false) {} 
@@ -86,6 +86,7 @@ namespace plr {
 
         // Member functions
         std::pair<int, int> choose_move(board& chess_board);
+        std::pair<int, int> choose_move_for_king(board& chess_board);
     };
 }
 

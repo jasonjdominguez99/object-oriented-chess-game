@@ -17,6 +17,9 @@
 //   pieces
 // 26/04/2021
 // - Simplified move_piece method by removing uneccessary if-else
+// 02/05/2021
+// - Changed move_piece method to be compatible with en passant and 
+//   castling moves
 
 
 #include <sstream>
@@ -57,7 +60,7 @@ namespace brd {
         return output;
     }
 
-    std::shared_ptr<pcs::chess_piece> board::operator[](int idx) const { 
+    std::shared_ptr<pcs::chess_piece>& board::operator[](int idx) { 
         // Check for out of bound index
         if (idx > 63 && idx >= 0) {
             std::cerr << "Board index out of range, exiting.";
@@ -158,17 +161,51 @@ board::board() {
     chess_board.push_back(std::make_shared<pcs::rook>(pcs::rook(pcs::black, 7*8 + 7)));
 }
 
-void board::move_piece(int initial_position, int final_position) {
-    chess_board[final_position] = std::move(chess_board[initial_position]);
-    /*
-    if (!chess_board[final_position]) {
-        // Final position on chess board is empty
+void board::move_piece(int initial_position, int final_position, move_type move) {
+    if (move == standard) {
         chess_board[final_position] = std::move(chess_board[initial_position]);
+        /*
+        if (!chess_board[final_position]) {
+            // Final position on chess board is empty
+            chess_board[final_position] = std::move(chess_board[initial_position]);
+        } else {
+            // Final position has a chess piece already there
+            // so remove it from the board
+            //removed_chess_pieces.push_back(chess_board[final_position]);
+            chess_board[final_position] = std::move(chess_board[initial_position]);
+        }
+        */
+    } else if (move == en_passant) {
+        // Piece which was captured en passant but not landed on, must be removed from board
+        // so first move piece to be captured back, then capture as normal
+        if (final_position == initial_position + 8 + 1 || final_position == initial_position + 8 - 1) {
+            chess_board[final_position] = std::move(chess_board[final_position - 8]);
+        } else if (final_position == initial_position - 8 + 1 || final_position == initial_position - 8 - 1) {
+            chess_board[final_position] = std::move(chess_board[final_position + 8]);
+        } else {
+            std::cerr << "Invalid en passant capture, exiting.";
+            exit(-1);
+        }
+        chess_board[final_position] = std::move(chess_board[initial_position]);
+        
+    } else if (move == castling) {
+        if (chess_board[initial_position]->get_symbol() == 'K' && chess_board[initial_position + 3]->get_symbol() == 'R' &&
+            !chess_board[final_position] && !chess_board[final_position - 1]) {
+
+            chess_board[final_position - 1] = std::move(chess_board[initial_position + 3]); // Move rook
+        } else if (chess_board[initial_position]->get_symbol() == 'K' && chess_board[initial_position - 4]->get_symbol() == 'R'&&
+            !chess_board[final_position] && !chess_board[final_position + 1]) {
+
+            chess_board[final_position + 1] = std::move(chess_board[initial_position - 4]); // Move rook
+        } else {
+            std::cerr << "Invalid castling move, exiting.";
+            exit(-1);
+        }
+        chess_board[final_position] = std::move(chess_board[initial_position]); // Move king as normal
+
     } else {
-        // Final position has a chess piece already there
-        // so remove it from the board
-        //removed_chess_pieces.push_back(chess_board[final_position]);
-        chess_board[final_position] = std::move(chess_board[initial_position]);
+        std::cerr << "Invalid move type, exiting.";
+        exit(-1); 
     }
-    */
+    
 }

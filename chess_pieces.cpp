@@ -29,8 +29,19 @@
 //   when out of range of the board
 // - Possible move functions now don't consider whether king is moved
 //   into check, that it done in chess_game class
+// 01/05/2021
+// - Fixed bug with queen being able to jump over pieces
+// - Fixed bug with pawn being able to jump over piece
+//   if taking two steps on its first move
+// - Used ANSI to output chess letter symbols in gray for black pieces
+//   and bold for both colored pieces
+// 02/05/2021
+// - Added functionality to give castling as a possible move for king
+// - Added en passant functionality to pawn
+// - Fixed bug with diagonal moves jumping over opposition pieces
 
 
+#include <sstream>
 #include <vector>
 #include <memory>
 #include <iterator>
@@ -42,11 +53,19 @@ using namespace pcs;
 
 namespace pcs {
     std::ostream & operator<<(std::ostream &output, std::shared_ptr<chess_piece> const& piece) {
-        output << piece->piece_symbol;
+        // Diplay chess piece symbol using ANSI to make symbols bold and 
+        // for blakc pieces gray
+        std::stringstream symbol_output_in_ansi;
+        if (piece->get_piece_color() == white) {
+            symbol_output_in_ansi << "\u001b[1m" << piece->piece_symbol << "\u001b[0m";
+        } else {
+            symbol_output_in_ansi << "\u001b[1m\u001b[30m" << piece->piece_symbol << "\u001b[0m";
+        }
+        output << symbol_output_in_ansi.str();
         return output;
     }
 
-        std::string color_to_string(color chess_piece_color) {
+    std::string color_to_string(color chess_piece_color) {
         switch(chess_piece_color) {
             case white:
                 return "white";
@@ -81,18 +100,6 @@ namespace pcs {
         for (int i{} ; i < 8*8 ; i++) {
             if (chess_board[i] && chess_board[i]->get_piece_color() == piece_color) {
                 std::vector<int> piece_possible_moves;
-                /*
-                if (chess_board[i]->get_symbol() == 'K') {
-                    // In the case of a king, assume it can do all its possible moves, to avoid
-                    // infinite loop trying to get king's possible moves
-                    if (i/8 < 7) { piece_possible_moves.push_back(i + 8); }
-                    if (i/8 > 0) { piece_possible_moves.push_back(i - 8); }
-                    if (i%8 < 7) { piece_possible_moves.push_back(i + 1); }
-                    if (i%8 > 0) { piece_possible_moves.push_back(i - 1); }
-                } else {
-                    piece_possible_moves = chess_board[i]->get_valid_moves(i, chess_board);
-                }
-                */
                 piece_possible_moves = chess_board[i]->get_valid_moves(i, chess_board);
             
                 all_possible_moves.insert(std::end(all_possible_moves), 
@@ -130,19 +137,33 @@ std::vector<int> pawn::get_valid_moves(int start_position, std::vector<std::shar
     // Check if pawn can move forward by 2 (if pawn's first move)
     if (!has_moved) {
         if (start_position_row + 2*position_increment < 8) {
-            if (!chess_board[start_position + 2*8*position_increment]) {
+            if (!chess_board[start_position + 2*8*position_increment] && 
+                !chess_board[start_position + 8*position_increment]) {
+
                 valid_new_positions.push_back(start_position + 2*8*position_increment); // moving forward by 2
             }
         }
     }
-    // Check if diagonal moves are possible (if attacking opposite color piece)
+    // Check if diagonal moves are possible (if attacking opposite color piece or if en passant is possible)
     if (start_position_row + position_increment < 8 && start_position_col + position_increment < 8) {
-        if (chess_board[start_position + (8*position_increment + position_increment)] && chess_board[start_position + (8*position_increment + position_increment)]->get_piece_color() != this->get_piece_color()) {
+        if ((chess_board[start_position + (8*position_increment + position_increment)] && 
+             chess_board[start_position + (8*position_increment + position_increment)]->get_piece_color() != this->get_piece_color()) ||
+            (chess_board[start_position + position_increment] && 
+             chess_board[start_position + position_increment]->get_piece_color() != this->get_piece_color() &&
+             chess_board[start_position + position_increment]->get_symbol() == 'p' &&
+             chess_board[start_position + position_increment]->is_en_passant_possible() == true)) {
+            
             valid_new_positions.push_back(start_position + (8*position_increment + position_increment)); // moving forward and right by 1
         }
     }
     if (start_position_row + position_increment < 8 && start_position_col - position_increment >= 0) {
-        if (chess_board[start_position + (8*position_increment - position_increment)] && chess_board[start_position + (8*position_increment - position_increment)]->get_piece_color() != this->get_piece_color()) {
+        if ((chess_board[start_position + (8*position_increment - position_increment)] && 
+             chess_board[start_position + (8*position_increment - position_increment)]->get_piece_color() != this->get_piece_color()) ||
+            (chess_board[start_position - position_increment] && 
+             chess_board[start_position - position_increment]->get_piece_color() != this->get_piece_color() &&
+             chess_board[start_position - position_increment]->get_symbol() == 'p' &&
+             chess_board[start_position - position_increment]->is_en_passant_possible() == true)) {
+            
             valid_new_positions.push_back(start_position + (8*position_increment - position_increment)); // moving forward and left by 1
         }
     }
@@ -296,6 +317,7 @@ std::vector<int> bishop::get_valid_moves(int start_position, std::vector<std::sh
                     valid_new_positions.push_back(8*j + i);
                     // If space contains opposite color piece, it cannot be jumped over
                     if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
+                        is_blocked = true;
                         break;
                     }
                 }
@@ -319,6 +341,7 @@ std::vector<int> bishop::get_valid_moves(int start_position, std::vector<std::sh
                     valid_new_positions.push_back(8*j + i);
                     // If space contains opposite color piece, it cannot be jumped over
                     if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
+                        is_blocked = true;
                         break;
                     }
                 }
@@ -342,6 +365,7 @@ std::vector<int> bishop::get_valid_moves(int start_position, std::vector<std::sh
                     valid_new_positions.push_back(8*j + i);
                     // If space contains opposite color piece, it cannot be jumped over
                     if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
+                        is_blocked = true;
                         break;
                     }
                 }
@@ -365,6 +389,7 @@ std::vector<int> bishop::get_valid_moves(int start_position, std::vector<std::sh
                     valid_new_positions.push_back(8*j + i);
                     // If space contains opposite color piece, it cannot be jumped over
                     if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
+                        is_blocked = true;
                         break;
                     }
                 }
@@ -392,9 +417,9 @@ std::vector<int> queen::get_valid_moves(int start_position, std::vector<std::sha
     // Find valid horizontal moves
     for (int i{start_position_col + 1} ; i < 8 ; i++) {
         if (chess_board[8*start_position_row + i] && chess_board[8*start_position_row + i]->get_piece_color() == this->get_piece_color()) {
-            continue;
+            break;
         } else {
-            valid_new_positions.push_back(8*start_position_row + i);
+            valid_new_positions.push_back(8*start_position_row + i); // Move right
             // If space contains opposite color piece, it cannot be jumped over
             if (chess_board[8*start_position_row + i] && chess_board[8*start_position_row + i]->get_piece_color() != this->get_piece_color()) {
                 break;
@@ -403,9 +428,9 @@ std::vector<int> queen::get_valid_moves(int start_position, std::vector<std::sha
     }
     for (int i{start_position_col - 1} ; i >= 0 ; i--) {
         if (chess_board[8*start_position_row + i] && chess_board[8*start_position_row + i]->get_piece_color() == this->get_piece_color()) {
-            continue;
+            break;
         } else {
-            valid_new_positions.push_back(8*start_position_row + i);
+            valid_new_positions.push_back(8*start_position_row + i); // Move left
             // If space contains opposite color piece, it cannot be jumped over
             if (chess_board[8*start_position_row + i] && chess_board[8*start_position_row + i]->get_piece_color() != this->get_piece_color()) {
                 break;
@@ -415,9 +440,9 @@ std::vector<int> queen::get_valid_moves(int start_position, std::vector<std::sha
     // Find valid vertical moves
     for (int i{start_position_row + 1} ; i < 8 ; i++) {
         if (chess_board[8*i + start_position_col] && chess_board[8*i + start_position_col]->get_piece_color() == this->get_piece_color()) {
-            continue;
+            break;
         } else {
-            valid_new_positions.push_back(8*i + start_position_col);
+            valid_new_positions.push_back(8*i + start_position_col); // Move forward
             // If space contains opposite color piece, it cannot be jumped over
             if (chess_board[8*i + start_position_col] && chess_board[8*i + start_position_col]->get_piece_color() != this->get_piece_color()) {
                 break;
@@ -426,9 +451,9 @@ std::vector<int> queen::get_valid_moves(int start_position, std::vector<std::sha
     }
     for (int i{start_position_row - 1} ; i >= 0 ; i--) {
         if (chess_board[8*i + start_position_col] && chess_board[8*i + start_position_col]->get_piece_color() == this->get_piece_color()) {
-            continue;
+            break;
         } else {
-            valid_new_positions.push_back(8*i + start_position_col);
+            valid_new_positions.push_back(8*i + start_position_col); // Move backward
             // If space contains opposite color piece, it cannot be jumped over
             if (chess_board[8*i + start_position_col] && chess_board[8*i + start_position_col]->get_piece_color() != this->get_piece_color()) {
                 break;
@@ -438,15 +463,18 @@ std::vector<int> queen::get_valid_moves(int start_position, std::vector<std::sha
 
     // Find valid diagonal moves
     // Moving up and to the right
+    bool is_blocked = false;
     for (int i{start_position_col + 1} ; i < 8 ; i++) {
         for (int j{start_position_row + 1} ; j < 8 ; j++) {
             if ( (start_position_col - i) == (start_position_row - j) ) {
                 if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == this->get_piece_color()) {
+                    is_blocked = true;
                     break;
                 } else {
                     valid_new_positions.push_back(8*j + i);
                     // If space contains opposite color piece, it cannot be jumped over
                     if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
+                        is_blocked = true;
                         break;
                     }
                 }
@@ -454,17 +482,23 @@ std::vector<int> queen::get_valid_moves(int start_position, std::vector<std::sha
                 continue;
             }
         }
+        if (is_blocked) {
+            break;
+        }
     }
     // Moving up and to the left
+    is_blocked = false;
     for (int i{start_position_col - 1} ; i >= 0 ; i--) {
         for (int j{start_position_row + 1} ; j < 8 ; j++) {
             if ( (i - start_position_col) == (start_position_row - j) ) {
                 if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == this->get_piece_color()) {
+                    is_blocked = true;
                     break;
                 } else {
                     valid_new_positions.push_back(8*j + i);
                     // If space contains opposite color piece, it cannot be jumped over
                     if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
+                        is_blocked = true;
                         break;
                     }
                 }
@@ -472,17 +506,23 @@ std::vector<int> queen::get_valid_moves(int start_position, std::vector<std::sha
                 continue;
             }
         }
+        if (is_blocked) {
+            break;
+        }
     }
     // Moving down and to the right
+    is_blocked = false;
     for (int i{start_position_col + 1} ; i < 8 ; i++) {
         for (int j{start_position_row - 1} ; j >= 0 ; j--) {
             if ( (start_position_col - i) == (j - start_position_row) ) {
                 if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == this->get_piece_color()) {
+                    is_blocked = true;
                     break;
                 } else {
                     valid_new_positions.push_back(8*j + i);
                     // If space contains opposite color piece, it cannot be jumped over
                     if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
+                        is_blocked = true;
                         break;
                     }
                 }
@@ -490,17 +530,23 @@ std::vector<int> queen::get_valid_moves(int start_position, std::vector<std::sha
                 continue;
             }
         }
+        if (is_blocked) {
+            break;
+        }
     }
     // Moving down and to the left
+    is_blocked = false;
     for (int i{start_position_col - 1} ; i >= 0 ; i--) {
         for (int j{start_position_row - 1} ; j >= 0 ; j--) {
             if ( (i - start_position_col) == (j - start_position_row) ) {
                 if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == this->get_piece_color()) {
+                    is_blocked = true;
                     break;
                 } else {
                     valid_new_positions.push_back(8*j + i);
                     // If space contains opposite color piece, it cannot be jumped over
                     if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
+                        is_blocked = true;
                         break;
                     }
                 }
@@ -508,8 +554,12 @@ std::vector<int> queen::get_valid_moves(int start_position, std::vector<std::sha
                 continue;
             }
         }
+        if (is_blocked) {
+            break;
+        }
     }
-    
+
+
     return valid_new_positions;
 }
 
@@ -566,6 +616,36 @@ std::vector<int> king::get_valid_moves(int start_position, std::vector<std::shar
             valid_new_positions.push_back(start_position - (8 + 1)); // moving backwards and left by 1
         }
     }
+
+    // Also check for the possibility of castling
+    // Kingside castling (castling with closest rook to king)
+    if (!this->has_moved) {
+        if (chess_board[start_position + 3] &&
+            chess_board[start_position + 3]->get_symbol() == 'R' &&
+            !chess_board[start_position + 3]->get_has_moved()) {
+
+            if (!chess_board[start_position + 1] &&
+                !chess_board[start_position + 2]) {
+
+                valid_new_positions.push_back(start_position + 2);
+            }
+        }
+    }
+    // Queenside castling (castling with rook furthest from king)
+    if (!this->has_moved) {
+        if (chess_board[start_position - 4] &&
+            chess_board[start_position - 4]->get_symbol() == 'R' &&
+            !chess_board[start_position - 4]->get_has_moved()) {
+
+            if (!chess_board[start_position - 1] &&
+                !chess_board[start_position - 2] &&
+                !chess_board[start_position - 3]) {
+
+                valid_new_positions.push_back(start_position - 2);
+            }
+        }
+    }
+
     
     return valid_new_positions;
 }

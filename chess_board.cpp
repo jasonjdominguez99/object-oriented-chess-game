@@ -20,6 +20,8 @@
 // 02/05/2021
 // - Changed move_piece method to be compatible with en passant and 
 //   castling moves
+// 03/05/2021
+// - Changed board positions to have lower case letters
 
 
 #include <sstream>
@@ -33,7 +35,7 @@ using namespace brd;
 
 namespace brd {
     std::ostream & operator<<(std::ostream &output, const board &b) {
-        output << std::endl << "     A   B   C   D   E   F   G   H" << std::endl;
+        output << std::endl << "     a   b   c   d   e   f   g   h" << std::endl;
         output << "  -----------------------------------" << std::endl;
         for (int i{7} ; i >= 0 ; i--) {
             output << i + 1 << " ||";
@@ -55,7 +57,7 @@ namespace brd {
             }
             output << "  -----------------------------------" << std::endl;
         }
-        output << "     A   B   C   D   E   F   G   H" << std::endl;
+        output << "     a   b   c   d   e   f   g   h" << std::endl;
 
         return output;
     }
@@ -79,18 +81,23 @@ namespace brd {
         row_number -= 1;
 
         int position_index{};
-        if (col_letter == 'A') { position_index = row_number*8 + 0; }
-        else if (col_letter == 'B') { position_index = row_number*8 + 1; }
-        else if (col_letter == 'C') { position_index = row_number*8 + 2; }
-        else if (col_letter == 'D') { position_index = row_number*8 + 3; }
-        else if (col_letter == 'E') { position_index = row_number*8 + 4; }
-        else if (col_letter == 'F') { position_index = row_number*8 + 5; }
-        else if (col_letter == 'G') { position_index = row_number*8 + 6; }
-        else if (col_letter == 'H') { position_index = row_number*8 + 7; }
+        if (col_letter == 'a') { position_index = row_number*8 + 0; }
+        else if (col_letter == 'b') { position_index = row_number*8 + 1; }
+        else if (col_letter == 'c') { position_index = row_number*8 + 2; }
+        else if (col_letter == 'd') { position_index = row_number*8 + 3; }
+        else if (col_letter == 'e') { position_index = row_number*8 + 4; }
+        else if (col_letter == 'f') { position_index = row_number*8 + 5; }
+        else if (col_letter == 'g') { position_index = row_number*8 + 6; }
+        else if (col_letter == 'h') { position_index = row_number*8 + 7; }
+        else {
+            return -1;
+        }
+        /*
         else {
             std::cerr << "Invalid board position.";
             exit(-1);
         }
+        */
 
         return position_index;
     }
@@ -100,14 +107,14 @@ namespace brd {
         int column_number = position_index%8 + 1;
 
         std::string position;
-        if (column_number == 1) { position = "A"; }
-        else if (column_number == 2) { position = "B"; }
-        else if (column_number == 3) { position = "C"; }
-        else if (column_number == 4) { position = "D"; }
-        else if (column_number == 5) { position = "E"; }
-        else if (column_number == 6) { position = "F"; }
-        else if (column_number == 7) { position = "G"; }
-        else if (column_number == 8) { position = "H"; }
+        if (column_number == 1) { position = "a"; }
+        else if (column_number == 2) { position = "b"; }
+        else if (column_number == 3) { position = "c"; }
+        else if (column_number == 4) { position = "d"; }
+        else if (column_number == 5) { position = "e"; }
+        else if (column_number == 6) { position = "f"; }
+        else if (column_number == 7) { position = "g"; }
+        else if (column_number == 8) { position = "h"; }
         else {
             std::cerr << "Invalid board position.";
             exit(-1);
@@ -164,17 +171,6 @@ board::board() {
 void board::move_piece(int initial_position, int final_position, move_type move) {
     if (move == standard) {
         chess_board[final_position] = std::move(chess_board[initial_position]);
-        /*
-        if (!chess_board[final_position]) {
-            // Final position on chess board is empty
-            chess_board[final_position] = std::move(chess_board[initial_position]);
-        } else {
-            // Final position has a chess piece already there
-            // so remove it from the board
-            //removed_chess_pieces.push_back(chess_board[final_position]);
-            chess_board[final_position] = std::move(chess_board[initial_position]);
-        }
-        */
     } else if (move == en_passant) {
         // Piece which was captured en passant but not landed on, must be removed from board
         // so first move piece to be captured back, then capture as normal

@@ -184,6 +184,8 @@ void chess_game::update_game_status() {
                                        [this](int board_index) {
                                            if (this->chess_board[board_index]) {
                                                return this->chess_board[board_index]->get_symbol() == 'K' && this->chess_board[board_index]->get_piece_color() != this->current_player->get_piece_color();
+                                           } else {
+                                               return false;
                                            }
                                        }) != possible_next_moves.end();
     

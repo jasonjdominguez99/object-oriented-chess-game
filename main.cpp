@@ -14,12 +14,11 @@
 //   able to start on chess engine
 // 02/05/2021
 // - Added functionality to promote pawns
+// 03/05/2021
+// - Added checks for valid user inputs
 
 
 #include <string>
-#include <vector>
-#include <iterator>
-#include <algorithm>
 #include <memory>
 #include "player_class.hpp"
 #include "chess_pieces.hpp"
@@ -31,10 +30,14 @@ using namespace pcs;
 using namespace cgm;
 
 
+// Function declarations
+int get_valid_input(int valid_input_one, int valid_input_two);
+
+
 int main() {
     std::cout << "Please enter the number of players (1/2): ";
-    int number_of_players;
-    std::cin >> number_of_players;
+    int number_of_players{};
+    number_of_players = get_valid_input(1, 2);
     
     human_player player_one;
     std::cout << "Player 1" << std::endl;
@@ -102,4 +105,39 @@ int main() {
     chess_game::display_stats(player_one.get_name(), player_two->get_name());
 
     return 0;
+}
+
+
+// Function definitions
+int get_valid_input(int valid_input_one, int valid_input_two) {
+    int number_input{};
+    std::string input{};
+    std::getline(std::cin, input);
+
+    bool is_input_valid{false};
+    while (!is_input_valid) {
+        // Make sure input is one of two valid inputs and int
+        if (std::cin.fail() || input == "" || 
+            input.find_first_not_of("0123456789") != std::string::npos || 
+            input.size() >= 10) {
+            std::cin.clear();
+            std::cout << "Sorry, your input was not valid, please enter "
+                         "a valid input (" << valid_input_one << "/" <<
+                         valid_input_two << "): ";
+            std::getline(std::cin, input);
+        } else {
+            // Make sure integer value is one of the valid inputs
+            number_input = std::stoi(input);
+            if (number_input != valid_input_one && number_input != valid_input_two) {
+                std::cin.clear();
+                std::cout << "Sorry, your input was not valid, please enter "
+                             "a valid input (" << valid_input_one << "/" <<
+                             valid_input_two << "): ";
+                std::getline(std::cin, input);
+            } else {
+                is_input_valid = true;
+            }
+        }
+    }
+    return number_input;
 }

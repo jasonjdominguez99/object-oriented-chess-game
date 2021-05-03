@@ -15,6 +15,8 @@
 // 02/05/2021
 // - Added functionality to check for possibility of 
 //   using castling legally
+// 03/05/2021
+// - Added checks for valid user inputs
 
 
 #include <algorithm>
@@ -33,16 +35,37 @@ using namespace brd;
 
 void player::ask_for_name() {
     std::cout << "Please enter your name: ";
-    std::string player_name;
-    std::cin >> player_name;
-
+    std::string player_name{};
+    std::getline(std::cin, player_name);
+    while (true) {
+        if (std::cin.fail() || player_name == "") {
+            std::cin.clear();
+            std::cout << "Surely you must have a name..." << std::endl;
+            std::cout << "Please enter your name: ";
+            std::getline(std::cin, player_name);
+        } else if (player_name.length() > 20) {
+            std::cin.clear();
+            std::cout << "That's a bit of a mouthful, how about we try again "
+                         "and find you a nickname less than 20 characters long?" << std::endl;
+            std::cout << "Please enter your name: ";
+            std::getline(std::cin, player_name);
+        } else {
+            break;
+        }
+    } 
     name = player_name;
 }
 
 void player::ask_for_color() {
-    std::cout << name << " please enter your chess piece color: ";
+    std::cout << name << " please enter your chess piece color (white/black): ";
     std::string chess_piece_color;
-    std::cin >> chess_piece_color;
+    std::getline(std::cin, chess_piece_color);
+    while (std::cin.fail() || (chess_piece_color != "white" && chess_piece_color != "black")) {
+        std::cin.clear();
+        std::cout << "Surely you know that chess pieces are only white or black...? Let's try again..." << std::endl;
+        std::cout << name << " please enter your chess piece color (white/black): ";
+        std::getline(std::cin, chess_piece_color);
+    }
 
     piece_color = string_to_color(chess_piece_color);
 }
@@ -99,18 +122,29 @@ std::pair<int, int> human_player::choose_move_for_king(board& chess_board) {
                                         }), possible_moves.end());
 
     std::cout << "Here are the possible moves for this chess piece: " << std::endl;
+    std::vector<std::string> possible_moves_board_positions{};
     std::vector<int>::iterator vector_begin{possible_moves.begin()};
     std::vector<int>::iterator vector_end{possible_moves.end()};
     std::vector<int>::iterator vector_iterator;
     for (vector_iterator = vector_begin ; vector_iterator < vector_end ; ++vector_iterator) {
-        std::cout << board_index_to_position(*vector_iterator) << std::endl;
+        std::string board_position{board_index_to_position(*vector_iterator)};
+        std::cout << board_position << std::endl;
+        possible_moves_board_positions.push_back(board_position);
     }
 
     std::cout << "To which of these positions do you want to move your piece?" << std::endl;
-    std::string end_position;
-    std::cin >> end_position;
+    std::string end_position{};
+    std::getline(std::cin, end_position);
+    while (std::cin.fail() || std::find(possible_moves_board_positions.begin(), 
+                                        possible_moves_board_positions.end(),
+                                        end_position) == possible_moves_board_positions.end()) {
+        std::cin.clear();
+        std::cout << "That's not a legal move... Do you even know how to play chess?!" << std::endl;
+        std::cout << "Please enter one of the possible positions to which this piece can move: ";
+        std::getline(std::cin, end_position);
+    }
     int end_position_index = board_position_to_index(end_position);
-    
+
     return std::pair<int, int>(king_position_index, end_position_index);
 }
 
@@ -118,16 +152,24 @@ std::pair<int, int> human_player::choose_move(board& chess_board) {
     std::cout << name << "'s turn..." << std::endl;
 
     int start_position_index{};
+    std::vector<int> possible_moves{};
+    std::vector<std::string> possible_moves_board_positions{};
     // Make sure player chooses one of their color pieces which has 
     // possible moves and not a blank chess board tile
     while (true) {
-        std::vector<int> possible_moves{};
+        possible_moves.clear();
+        possible_moves_board_positions.clear();
         while (possible_moves.size() == 0) {
             do {
                 do {
                     std::cout << "Please enter the position of the chess piece you want to move: " ;
                     std::string start_position;
-                    std::cin >> start_position;
+                    std::getline(std::cin, start_position);
+                    while (board_position_to_index(start_position) < 0) {
+                        std::cin.clear();
+                        std::cout << "Please enter a valid board position: ";
+                        std::getline(std::cin, start_position);
+                    }
                     start_position_index = board_position_to_index(start_position);
 
                     if (!chess_board[start_position_index]) {
@@ -243,22 +285,36 @@ std::pair<int, int> human_player::choose_move(board& chess_board) {
         std::vector<int>::iterator vector_end{possible_moves.end()};
         std::vector<int>::iterator vector_iterator;
         for (vector_iterator = vector_begin ; vector_iterator < vector_end ; ++vector_iterator) {
-            std::cout << board_index_to_position(*vector_iterator) << std::endl;
+            std::string board_position{board_index_to_position(*vector_iterator)};
+            std::cout << board_position << std::endl;
+            possible_moves_board_positions.push_back(board_position);
         }
     
         std::cout << "Do you still want to move this chess piece (y/n)?" << std::endl;
-        std::string piece_to_move_decision;
-        std::cin >> piece_to_move_decision;
+        std::string piece_to_move_decision{};
+        std::getline(std::cin, piece_to_move_decision);
+        while (piece_to_move_decision != "y" && piece_to_move_decision != "n") {
+            std::cin.clear();
+            std::cout << "Please enter y or n: ";
+            std::getline(std::cin, piece_to_move_decision);
+        }
         if (piece_to_move_decision == "y") {
             break;
         }
     }
     
-    std::cout << "To which of the possible positions do you want to move your piece?" << std::endl;
-    std::string end_position;
-    std::cin >> end_position;
+    std::cout << "To which of these positions do you want to move your piece?" << std::endl;
+    std::string end_position{};
+    std::getline(std::cin, end_position);
+    while (std::cin.fail() || std::find(possible_moves_board_positions.begin(), 
+                                        possible_moves_board_positions.end(),
+                                        end_position) == possible_moves_board_positions.end()) {
+        std::cin.clear();
+        std::cout << "That's not a legal move... Do you even know how to play chess?!" << std::endl;
+        std::cout << "Please enter one of the possible positions to which this piece can move: ";
+        std::getline(std::cin, end_position);
+    }
     int end_position_index = board_position_to_index(end_position);
-    // Add check to see if correct move is entered
 
     return std::pair<int, int>(start_position_index, end_position_index);
 }

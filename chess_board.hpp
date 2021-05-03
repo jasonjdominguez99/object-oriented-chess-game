@@ -45,7 +45,6 @@ namespace brd {
 
     private:
         std::vector<std::shared_ptr<pcs::chess_piece>> chess_board;
-        //std::vector<std::unique_ptr<pcs::chess_piece>> removed_chess_pieces;
 
     public:
         board();

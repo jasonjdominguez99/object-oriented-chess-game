@@ -12,6 +12,8 @@
 // 01/05/2021
 // - Added chess_bot functionality to randomly select
 //   possible moves using random seed
+// 06/05/2021
+// - Removed using namespace to adhere to house style
 
 
 #ifndef PLAYER_H
@@ -19,29 +21,27 @@
 
 
 #include <string>
+#include <utility>
 #include "chess_pieces.hpp"
 #include "chess_board.hpp"
 
 
-using namespace pcs;
-using namespace brd;
-
-
+// Class and function definitions
 namespace plr {
 
     class player
     {
     protected:
         std::string name{};
-        color piece_color{};
+        pcs::color piece_color{};
         bool is_human{};
 
     public:
         // Constructors
         player() {}
-        player(color player_color) : piece_color{player_color} {}
+        player(pcs::color player_color) : piece_color{player_color} {}
         player(bool human_or_not) : is_human{human_or_not} {}
-        player(std::string player_name, color player_color, bool human_or_not) :
+        player(std::string player_name, pcs::color player_color, bool human_or_not) :
             name{player_name}, piece_color{player_color}, is_human{human_or_not} {}
         player(player &player_to_copy) {
             name = player_to_copy.name;
@@ -51,13 +51,13 @@ namespace plr {
         virtual ~player(){}
 
         // Member functions
-        virtual std::pair<int, int> choose_move(board& chess_board)=0;
-        virtual std::pair<int, int> choose_move_for_king(board& chess_board)=0;
+        virtual std::pair<int, int> choose_move(brd::board& chess_board)=0;
+        virtual std::pair<int, int> choose_move_for_king(brd::board& chess_board)=0;
         void ask_for_name();
         void ask_for_color();
 
         std::string get_name() { return name; }
-        color get_piece_color() { return piece_color; }
+        pcs::color get_piece_color() { return piece_color; }
         bool get_is_human() { return is_human; }
     };
 
@@ -66,27 +66,27 @@ namespace plr {
     public:
         // Constructors
         human_player() { is_human = true; }
-        human_player(color player_color) : player(player_color) {} 
+        human_player(pcs::color player_color) : player(player_color) {} 
         human_player(bool human_or_not) : player(human_or_not) {}
         // Destructor
         virtual ~human_player(){}
 
         // Member functions
-        std::pair<int, int> choose_move(board& chess_board);
-        std::pair<int, int> choose_move_for_king(board& chess_board);
+        std::pair<int, int> choose_move(brd::board& chess_board);
+        std::pair<int, int> choose_move_for_king(brd::board& chess_board);
     };
 
     class chess_bot : public player
     {
     public:
         // Constructors
-        chess_bot(color player_color) : player("ChessBot", player_color, false) {} 
+        chess_bot(pcs::color player_color) : player("ChessBot", player_color, false) {} 
         // Destructor
         virtual ~chess_bot(){}
 
         // Member functions
-        std::pair<int, int> choose_move(board& chess_board);
-        std::pair<int, int> choose_move_for_king(board& chess_board);
+        std::pair<int, int> choose_move(brd::board& chess_board);
+        std::pair<int, int> choose_move_for_king(brd::board& chess_board);
     };
 }
 

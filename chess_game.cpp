@@ -23,6 +23,8 @@
 // - Added functionality to promote pawn
 // - Added compatibility with choosing legal en passant
 //   and castling moves
+// 06/05/2021
+// - Removed using namespace to adhere to house style
 
 
 #include <string>
@@ -36,19 +38,13 @@
 #include "chess_game.hpp"
 
 
-using namespace plr;
-using namespace pcs;
-using namespace brd;
-using namespace cgm;
+// Class and function definitions
+int cgm::chess_game::games_played{0};
+int cgm::chess_game::player_one_wins{0};
+int cgm::chess_game::player_two_wins{0};
+int cgm::chess_game::draws{0};
 
-
-// Function definitions
-int chess_game::games_played{0};
-int chess_game::player_one_wins{0};
-int chess_game::player_two_wins{0};
-int chess_game::draws{0};
-
-void chess_game::get_next_player_ready() {
+void cgm::chess_game::get_next_player_ready() {
     if (current_player == players[0]) {
         current_player = players[1];
     } else {
@@ -56,7 +52,7 @@ void chess_game::get_next_player_ready() {
     }
 }
 
-void chess_game::current_player_make_a_move(bool in_check) {
+void cgm::chess_game::current_player_make_a_move(bool in_check) {
     std::pair<int, int> move;
     if (in_check) {
         move = current_player->choose_move_for_king(chess_board);
@@ -66,17 +62,17 @@ void chess_game::current_player_make_a_move(bool in_check) {
     int start_position_index = move.first;
     int end_position_index = move.second;
 
-    move_type type_of_move{standard};
+    brd::move_type type_of_move{brd::standard};
     // Must be en passant move if pawn is moving diagonally into empty square
     if (chess_board[start_position_index]->get_symbol() == 'p' && !chess_board[end_position_index]) {
         if (end_position_index == start_position_index + 8 + 1 || end_position_index == start_position_index + 8 - 1 || 
             end_position_index == start_position_index - 8 + 1 || end_position_index == start_position_index - 8 - 1) {
             
-            type_of_move = en_passant;
+            type_of_move = brd::en_passant;
         }
     } else if (chess_board[start_position_index]->get_symbol() == 'K' && !chess_board[end_position_index]) {
         if (end_position_index == start_position_index + 2 || end_position_index == start_position_index - 2) {
-            type_of_move = castling;
+            type_of_move = brd::castling;
         }
     }
     
@@ -96,11 +92,11 @@ void chess_game::current_player_make_a_move(bool in_check) {
         int pawn_position_row{end_position_index/8};
         int fourth_row_index{3};
         int fifth_row_index{4};
-        if (chess_board[end_position_index]->get_piece_color() == white &&
+        if (chess_board[end_position_index]->get_piece_color() == pcs::white &&
             pawn_position_row == fourth_row_index) {
             
             chess_board[end_position_index]->set_en_passant_possibility(true);
-        } else if (chess_board[end_position_index]->get_piece_color() == black &&
+        } else if (chess_board[end_position_index]->get_piece_color() == pcs::black &&
                    pawn_position_row == fifth_row_index) {
             
             chess_board[end_position_index]->set_en_passant_possibility(true);
@@ -112,7 +108,7 @@ void chess_game::current_player_make_a_move(bool in_check) {
     // so need to know if pawn had moved before this move
     chess_board[end_position_index]->has_been_moved();
     // For castling rook has also been moved
-    if (type_of_move == castling) {
+    if (type_of_move == brd::castling) {
         if (end_position_index > start_position_index) {
             chess_board[end_position_index - 1]->has_been_moved();
         } else {
@@ -121,10 +117,10 @@ void chess_game::current_player_make_a_move(bool in_check) {
     }
 }
 
-void chess_game::promote_pawn_if_possible() {
+void cgm::chess_game::promote_pawn_if_possible() {
     int opposite_row_begin_index;
     int opposite_row_end_index;
-    if (current_player->get_piece_color() == white) {
+    if (current_player->get_piece_color() == pcs::white) {
         opposite_row_begin_index = 57;
         opposite_row_end_index = 64;
     } else {
@@ -148,16 +144,16 @@ void chess_game::promote_pawn_if_possible() {
                 std::cin >> chosen_promotion_piece_symbol;
 
                 if (chosen_promotion_piece_symbol == "N") {
-                    chess_board[pawn_to_promote_index] = std::move(std::make_shared<knight>(knight(current_player->get_piece_color(), old_pawn_id)));
+                    chess_board[pawn_to_promote_index] = std::move(std::make_shared<pcs::knight>(pcs::knight(current_player->get_piece_color(), old_pawn_id)));
                     break;
                 } else if (chosen_promotion_piece_symbol == "B") {
-                    chess_board[pawn_to_promote_index] = std::move(std::make_shared<bishop>(bishop(current_player->get_piece_color(), old_pawn_id)));
+                    chess_board[pawn_to_promote_index] = std::move(std::make_shared<pcs::bishop>(pcs::bishop(current_player->get_piece_color(), old_pawn_id)));
                     break;
                 } else if (chosen_promotion_piece_symbol == "R") {
-                    chess_board[pawn_to_promote_index] = std::move(std::make_shared<rook>(rook(current_player->get_piece_color(), old_pawn_id)));
+                    chess_board[pawn_to_promote_index] = std::move(std::make_shared<pcs::rook>(pcs::rook(current_player->get_piece_color(), old_pawn_id)));
                     break;
                 } else if (chosen_promotion_piece_symbol == "Q") {
-                    chess_board[pawn_to_promote_index] = std::move(std::make_shared<queen>(queen(current_player->get_piece_color(), old_pawn_id)));
+                    chess_board[pawn_to_promote_index] = std::move(std::make_shared<pcs::queen>(pcs::queen(current_player->get_piece_color(), old_pawn_id)));
                     break;
                 } else {
                     std::cout << "You MUST promote to one of these pieces (N, B, R, Q)" << std::endl;
@@ -172,7 +168,7 @@ void chess_game::promote_pawn_if_possible() {
     }
 }
 
-void chess_game::update_game_status() {
+void cgm::chess_game::update_game_status() {
     bool check_on_opposition;
     bool checkmate_on_opposition;
     std::vector<int> possible_next_moves;
@@ -254,7 +250,7 @@ void chess_game::update_game_status() {
     }
 }
 
-void chess_game::game_over() {
+void cgm::chess_game::game_over() {
     std::cout << "Game over!" << std::endl;
 
     ++games_played;
@@ -272,7 +268,7 @@ void chess_game::game_over() {
     }
 }
 
-void chess_game::display_stats(std::string player_one_name, std::string player_two_name) {
+void cgm::chess_game::display_stats(std::string player_one_name, std::string player_two_name) {
     std::cout << std::endl << "        Final game statistics" << std::endl;
     std::cout << "--------------------------------------" << std::endl;
     std::cout << "Games played: " << games_played << std::endl;

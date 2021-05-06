@@ -17,9 +17,13 @@
 //   using castling legally
 // 03/05/2021
 // - Added checks for valid user inputs
+// 06/05/2021
+// - Removed using namespace to adhere to house style
 
 
 #include <algorithm>
+#include <vector>
+#include <iterator>
 #include <utility>
 #include <random>
 #include <chrono>
@@ -28,12 +32,8 @@
 #include "chess_board.hpp"
 
 
-using namespace plr;
-using namespace pcs;
-using namespace brd;
-
-
-void player::ask_for_name() {
+// Class and function definitions
+void plr::player::ask_for_name() {
     std::cout << "Please enter your name: ";
     std::string player_name{};
     std::getline(std::cin, player_name);
@@ -56,7 +56,7 @@ void player::ask_for_name() {
     name = player_name;
 }
 
-void player::ask_for_color() {
+void plr::player::ask_for_color() {
     std::cout << name << " please enter your chess piece color (white/black): ";
     std::string chess_piece_color;
     std::getline(std::cin, chess_piece_color);
@@ -67,10 +67,10 @@ void player::ask_for_color() {
         std::getline(std::cin, chess_piece_color);
     }
 
-    piece_color = string_to_color(chess_piece_color);
+    piece_color = pcs::string_to_color(chess_piece_color);
 }
 
-std::pair<int, int> human_player::choose_move_for_king(board& chess_board) {
+std::pair<int, int> plr::human_player::choose_move_for_king(brd::board& chess_board) {
     int king_position_index{};
     for (int i{} ; i < 8*8 ; i++) {
         if (chess_board[i] && 
@@ -127,7 +127,7 @@ std::pair<int, int> human_player::choose_move_for_king(board& chess_board) {
     std::vector<int>::iterator vector_end{possible_moves.end()};
     std::vector<int>::iterator vector_iterator;
     for (vector_iterator = vector_begin ; vector_iterator < vector_end ; ++vector_iterator) {
-        std::string board_position{board_index_to_position(*vector_iterator)};
+        std::string board_position{brd::board_index_to_position(*vector_iterator)};
         std::cout << board_position << std::endl;
         possible_moves_board_positions.push_back(board_position);
     }
@@ -143,12 +143,12 @@ std::pair<int, int> human_player::choose_move_for_king(board& chess_board) {
         std::cout << "Please enter one of the possible positions to which this piece can move: ";
         std::getline(std::cin, end_position);
     }
-    int end_position_index = board_position_to_index(end_position);
+    int end_position_index = brd::board_position_to_index(end_position);
 
     return std::pair<int, int>(king_position_index, end_position_index);
 }
 
-std::pair<int, int> human_player::choose_move(board& chess_board) {
+std::pair<int, int> plr::human_player::choose_move(brd::board& chess_board) {
     std::cout << name << "'s turn..." << std::endl;
 
     int start_position_index{};
@@ -165,12 +165,12 @@ std::pair<int, int> human_player::choose_move(board& chess_board) {
                     std::cout << "Please enter the position of the chess piece you want to move: " ;
                     std::string start_position;
                     std::getline(std::cin, start_position);
-                    while (board_position_to_index(start_position) < 0) {
+                    while (brd::board_position_to_index(start_position) < 0) {
                         std::cin.clear();
                         std::cout << "Please enter a valid board position: ";
                         std::getline(std::cin, start_position);
                     }
-                    start_position_index = board_position_to_index(start_position);
+                    start_position_index = brd::board_position_to_index(start_position);
 
                     if (!chess_board[start_position_index]) {
                         std::cout << "Ummm... that's... not a chess piece...... Please try again..." << std::endl;
@@ -285,7 +285,7 @@ std::pair<int, int> human_player::choose_move(board& chess_board) {
         std::vector<int>::iterator vector_end{possible_moves.end()};
         std::vector<int>::iterator vector_iterator;
         for (vector_iterator = vector_begin ; vector_iterator < vector_end ; ++vector_iterator) {
-            std::string board_position{board_index_to_position(*vector_iterator)};
+            std::string board_position{brd::board_index_to_position(*vector_iterator)};
             std::cout << board_position << std::endl;
             possible_moves_board_positions.push_back(board_position);
         }
@@ -314,12 +314,12 @@ std::pair<int, int> human_player::choose_move(board& chess_board) {
         std::cout << "Please enter one of the possible positions to which this piece can move: ";
         std::getline(std::cin, end_position);
     }
-    int end_position_index = board_position_to_index(end_position);
+    int end_position_index = brd::board_position_to_index(end_position);
 
     return std::pair<int, int>(start_position_index, end_position_index);
 }
 
-std::pair<int, int> chess_bot::choose_move_for_king(board& chess_board) {
+std::pair<int, int> plr::chess_bot::choose_move_for_king(brd::board& chess_board) {
     int king_position_index{};
     for (int i{} ; i < 8*8 ; i++) {
         if (chess_board[i] && 
@@ -381,7 +381,7 @@ std::pair<int, int> chess_bot::choose_move_for_king(board& chess_board) {
     return std::pair<int, int>(king_position_index, chosen_final_position);
 }
 
-std::pair<int, int> chess_bot::choose_move(board& chess_board) {
+std::pair<int, int> plr::chess_bot::choose_move(brd::board& chess_board) {
     std::cout << "ChessBot's turn..." << std::endl;
     std::cout << "Choosing move..." << std::endl;
 

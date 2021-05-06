@@ -9,21 +9,27 @@
 // - Restructured entire code to include chess_game class
 //   still capable of the same functionality, but now
 //   able to start on chess engine
-
+// 06/05/2021
+// - Removed uneccessary #includes
 
 #ifndef CHESS_GAME_H
 #define CHESS_GAME_H
 
 
-#include <string>
-#include <vector>
-#include <iterator>
-#include <algorithm>
-#include "player_class.hpp"
-#include "chess_pieces.hpp"
 #include "chess_board.hpp"
 
 
+// Forward declarations
+namespace plr {
+    class player;
+}
+
+namespace brd {
+    class board;
+}
+
+
+// Class and function definitions
 namespace cgm {
     enum game_status {active, 
                       check,
@@ -59,7 +65,7 @@ namespace cgm {
         // Member functions
         std::shared_ptr<plr::player> get_current_player() {return current_player; }
         game_status get_game_status() { return status; }
-        board get_chess_board() { return chess_board; }
+        brd::board get_chess_board() { return chess_board; }
         bool has_ended() { return status == checkmate || status == resignation; }
 
         void get_next_player_ready();

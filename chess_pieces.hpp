@@ -34,6 +34,7 @@
 #include <memory>
 
 
+// Class and function definitions
 namespace pcs {
     enum color {white, black};
     std::string color_to_string(color chess_piece_color);

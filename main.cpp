@@ -16,18 +16,16 @@
 // - Added functionality to promote pawns
 // 03/05/2021
 // - Added checks for valid user inputs
+// 06/05/2021
+// - Removed using namespace to adhere to house style
+// - Removed uneccessary #includes
 
 
 #include <string>
 #include <memory>
-#include "player_class.hpp"
 #include "chess_pieces.hpp"
+#include "player_class.hpp"
 #include "chess_game.hpp"
-
-
-using namespace plr;
-using namespace pcs;
-using namespace cgm;
 
 
 // Function declarations
@@ -39,30 +37,30 @@ int main() {
     int number_of_players{};
     number_of_players = get_valid_input(1, 2);
     
-    human_player player_one;
+    plr::human_player player_one;
     std::cout << "Player 1" << std::endl;
     player_one.ask_for_name();
     player_one.ask_for_color();
-    std::cout << player_one.get_name() << " your color is " << color_to_string(player_one.get_piece_color()) << std::endl;
+    std::cout << player_one.get_name() << " your color is " << pcs::color_to_string(player_one.get_piece_color()) << std::endl;
 
-    std::shared_ptr<player> player_two;
+    std::shared_ptr<plr::player> player_two;
     if (number_of_players == 1) {
-        player_two = std::make_shared<chess_bot>(opposite_color(player_one.get_piece_color()));
+        player_two = std::make_shared<plr::chess_bot>(pcs::opposite_color(player_one.get_piece_color()));
     } else {
         std::cout << "Player 2" << std::endl;
-        player_two = std::make_shared<human_player>(opposite_color(player_one.get_piece_color()));
+        player_two = std::make_shared<plr::human_player>(pcs::opposite_color(player_one.get_piece_color()));
         player_two->ask_for_name();
-        std::cout << player_two->get_name() << " your color is " << color_to_string(player_two->get_piece_color()) << std::endl;
+        std::cout << player_two->get_name() << " your color is " << pcs::color_to_string(player_two->get_piece_color()) << std::endl;
     }
 
     bool keep_playing{true};
     while (keep_playing) {
-        chess_game game(player_one, player_two);
+        cgm::chess_game game(player_one, player_two);
         std::cout << std::endl << game.get_chess_board() << std::endl;
 
         while (game.has_ended() == false) {
             bool in_check;
-            if (game.get_game_status() == check) {
+            if (game.get_game_status() == cgm::check) {
                 std::cout << "QUICK! " << game.get_current_player()->get_name() << ", you must move your must move your king!" << std::endl;
                 in_check = true;
             } else {
@@ -102,7 +100,7 @@ int main() {
         }
     }
 
-    chess_game::display_stats(player_one.get_name(), player_two->get_name());
+    cgm::chess_game::display_stats(player_one.get_name(), player_two->get_name());
 
     return 0;
 }

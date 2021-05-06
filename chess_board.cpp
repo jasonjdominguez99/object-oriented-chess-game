@@ -22,17 +22,19 @@
 //   castling moves
 // 03/05/2021
 // - Changed board positions to have lower case letters
+// 06/05/2021
+// - Removed using namespace to adhere to house style
 
 
 #include <sstream>
+#include <iostream>
+#include <vector>
 #include <memory>
 #include "chess_board.hpp"
 #include "chess_pieces.hpp"
 
 
-using namespace brd;
-
-
+// Class and function definitions
 namespace brd {
     std::ostream & operator<<(std::ostream &output, const board &b) {
         output << std::endl << "     a   b   c   d   e   f   g   h" << std::endl;
@@ -131,7 +133,7 @@ namespace brd {
     }
 }
 
-board::board() {
+brd::board::board() {
     // Initialize white pieces on chess board
     // starting from bottom left to top right
     chess_board.push_back(std::make_shared<pcs::rook>(pcs::rook(pcs::white, 0)));
@@ -168,7 +170,7 @@ board::board() {
     chess_board.push_back(std::make_shared<pcs::rook>(pcs::rook(pcs::black, 7*8 + 7)));
 }
 
-void board::move_piece(int initial_position, int final_position, move_type move) {
+void brd::board::move_piece(int initial_position, int final_position, move_type move) {
     if (move == standard) {
         chess_board[final_position] = std::move(chess_board[initial_position]);
     } else if (move == en_passant) {

@@ -27,11 +27,13 @@
 #include <memory>
 
 
+// Forward declarations
 namespace pcs {
     class chess_piece;
 }
 
 
+// Class and function definitions
 namespace brd {
     int board_position_to_index(std::string position);
     std::string board_index_to_position(int position_index);

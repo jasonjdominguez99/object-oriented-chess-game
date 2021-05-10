@@ -25,13 +25,19 @@
 //   and castling moves
 // 06/05/2021
 // - Removed using namespace to adhere to house style
+// 10/05/2021
+// - Added functionality to save game in .pgn format
 
 
 #include <string>
+#include <sstream>
+#include <fstream>
+#include <limits>
 #include <vector>
 #include <iterator>
 #include <algorithm>
 #include <utility>
+#include <ctime>
 #include "player_class.hpp"
 #include "chess_pieces.hpp"
 #include "chess_board.hpp"
@@ -76,6 +82,33 @@ void cgm::chess_game::current_player_make_a_move(bool in_check) {
         }
     }
     
+    // Record move
+    std::stringstream move_name;
+    if (type_of_move == brd::castling) {
+        if (start_position_index == 6 || start_position_index == 62) {
+            // Kingside castling
+            move_name << "O-O";
+        } else if (start_position_index == 2 || start_position_index == 58) {
+            // Queenside castling
+            move_name << "O-O-O";
+        }
+    } else {
+        if (chess_board[start_position_index]->get_symbol() != 'p') {
+            move_name << chess_board[start_position_index]->get_symbol();
+        }
+        if (chess_board[end_position_index]) {
+            // Move was a capture
+            move_name << "x";
+        }
+
+        move_name << brd::board_index_to_position(end_position_index);
+
+        if (type_of_move == brd::en_passant) {
+            move_name << " e.p.";
+        }
+    }
+    moves_played.push_back(move_name.str());
+
     chess_board.move_piece(start_position_index, end_position_index, type_of_move);
 
     // Reset all pawns to have no possibility of being captured via en passant
@@ -163,6 +196,11 @@ void cgm::chess_game::promote_pawn_if_possible() {
 
             chess_board[pawn_to_promote_index]->has_been_moved();
             std::cout << std::endl << this->get_chess_board() << std::endl;
+
+            // Add pawn promotion to moves_played
+            moves_played.back() += "=";
+            moves_played.back() += chess_board[pawn_to_promote_index]->get_symbol();
+
             break;
         }
     }
@@ -242,9 +280,13 @@ void cgm::chess_game::update_game_status() {
     if (check_on_opposition && !checkmate_on_opposition) {
         std::cout << "Check!" << std::endl;
         status = check;
+        // Update record of moves
+        moves_played.back() += "+" ;
     } else if (checkmate_on_opposition) {
         std::cout << "Checkmate!" << std::endl;
         status = checkmate;
+        // Update record of moves
+        moves_played.back() += "#" ;
     } else {
         status = active;
     }
@@ -283,4 +325,62 @@ void cgm::chess_game::display_stats(std::string player_one_name, std::string pla
         std::cout << "Overal a draw... pretty boring..." << std::endl;
     }
     std::cout << "--------------------------------------" << std::endl;
+}
+
+void cgm::chess_game::save_game() {
+    std::cout << "Please enter the file path where you would like the game to be save:" << std::endl;
+    std::string file_save_path{};
+    std::cin >> file_save_path;
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    std::ofstream save_file(file_save_path + ".pgn");
+
+    // Write heading of file in pgn format
+    save_file << "[Event \"Pointless chess game\"]" << std::endl;
+    save_file << "[Site \"Some computer somewhere\"]" << std::endl;
+    std::time_t ttime = time(0);
+    char* dt = std::ctime(&ttime);
+    std::string date_and_time(dt, 1);
+    date_and_time.pop_back(); // pop back necessary to remove \n
+    save_file << "[Date " + date_and_time + "]" << std::endl; 
+    save_file << "[Round " << games_played << "]" << std::endl;
+    save_file << "[White " << players[0]->get_name() << "]" << std::endl;
+    save_file << "[Black " << players[1]->get_name() << "]" << std::endl;
+    if (status == checkmate) {
+        if (current_player->get_piece_color() != pcs::white) {
+            save_file << "[Result \"1-0\"]" << std::endl;
+        } else if (current_player->get_piece_color() != pcs::black) {
+            save_file << "[Result \"0-1\"]" << std::endl;
+        }
+    } else {
+        // Game unfinished
+        save_file << "[Result \"*\"]" << std::endl;
+    }
+
+    // Write game's moves to file in pgn format
+    std::vector<std::string>::iterator first_move{moves_played.begin()};
+    std::vector<std::string>::iterator last_move{moves_played.end()};
+    std::vector<std::string>::iterator move;
+    int move_number{1};
+    int game_round_number{1};
+    for (move = first_move ; move < last_move ; ++move) {
+        if (move_number%2 != 0) {
+            save_file << game_round_number << ". " << *move << " ";
+        } else {
+            save_file << *move << std::endl;
+            ++game_round_number;
+        }
+        ++move_number;
+    }
+
+    if (status == checkmate) {
+        if (current_player->get_piece_color() != pcs::white) {
+            save_file << "1-0" << std::endl;
+        } else if (current_player->get_piece_color() != pcs::black) {
+            save_file << "0-1" << std::endl;
+        }
+
+    save_file.close();
+    }
 }

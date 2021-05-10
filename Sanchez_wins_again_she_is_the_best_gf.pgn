@@ -1,0 +1,26 @@
+[Event "Pointless chess game"]
+[Site "Some computer somewhere"]
+[Date "2021.05.10"]
+[Round 1]
+[White Sanchayata*]
+[Black ChessBot]
+[Result "0-1"]
+1. b6 Nh3
+2. Ba6 Rg1
+3. h5 c3
+4. b5 f4
+5. f5 b4
+6. Rh6 g4
+7. Rg6 e4
+8. Rc6 Qe2
+9. Rc4 Bb2
+10. Rxb4 a3
+11. Rxb2 a4
+12. xg4 d4
+13. Rxe2+ Kd1
+14. xh3 Na3
+15. b4 Rg3
+16. b3 d5
+17. b2 d6
+18. Rf2 a5
+19. b1stics# 0-1

@@ -491,7 +491,10 @@ std::pair<int, int> plr::chess_bot::choose_move(brd::board& chess_board) {
             }
             
             std::pair<int, std::vector<int>> possible_moves = std::pair<int, std::vector<int>>(i, possible_final_positions);
-            all_possible_moves.push_back(possible_moves);
+            // Account for pieces with no possible moves (i.e. king had moves removed and now has none)
+            if (possible_moves.second.size() > 0) {
+                all_possible_moves.push_back(possible_moves);
+            }
         }
     }
 

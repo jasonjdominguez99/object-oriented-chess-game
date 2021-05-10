@@ -1,0 +1,19 @@
+[Event "Pointless chess game"]
+[Site "Some computer somewhere"]
+[Date "2021.05.10"]
+[Round 1]
+[White Jason]
+[Black ChessBot]
+[Result "1-0"]
+1. Na3 c6
+2. Nb5 Qa5
+3. Nf3 g5
+4. Nxg5 f5
+5. Ne6 Kf7
+6. e4 d5
+7. h4 b6
+8. Rh3 Na6
+9. Rg3 Bh6
+10. Rg6 f4
+11. Rxh6 Rb8
+12. Qh5# 1-0

@@ -19,6 +19,8 @@
 // 06/05/2021
 // - Removed using namespace to adhere to house style
 // - Removed uneccessary #includes
+// 10/05/2021
+// - Added functionality to save game in .pgn format
 
 
 #include <string>
@@ -77,6 +79,25 @@ int main() {
         }
 
         game.game_over();
+
+        while (true) {
+            std::cout << "Would you like to save this game? (y/n) ";
+            std::string save_game_input;
+            std::cin >> save_game_input;
+            if (save_game_input == "y" || save_game_input == "Y" ||
+                save_game_input == "yes" || save_game_input == "Yes") {
+
+                game.save_game();
+                break;
+            } else if (save_game_input == "n" || save_game_input == "N" ||
+                       save_game_input == "no" || save_game_input == "No") {
+            
+                break;
+            } else {
+                std::cout << "Were you not listening...? I said, WOULD YOU LIKE TO SAVE THIS GAME!" << std::endl;
+                std::cout << "Let's try this again..." << std::endl;
+            }
+        }
 
         keep_playing = false;
         while (true) {

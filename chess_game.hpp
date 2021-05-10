@@ -43,7 +43,7 @@ namespace cgm {
         std::shared_ptr<plr::player> current_player;
         brd::board chess_board;
         game_status status;
-        //std::vector<std::string> moves_played;
+        std::vector<std::string> moves_played;
 
         static int games_played;
         static int player_one_wins;
@@ -73,6 +73,8 @@ namespace cgm {
         void promote_pawn_if_possible();
         void update_game_status();
         void game_over();
+        void save_game();
+        void load_game();
         static void display_stats(std::string player_one_name, std::string player_two_name);
     };
 }

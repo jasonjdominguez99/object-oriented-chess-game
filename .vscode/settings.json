@@ -45,7 +45,9 @@
         "algorithm": "cpp",
         "random": "cpp",
         "chrono": "cpp",
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "ctime": "cpp",
+        "fstream": "cpp"
     },
     "C_Cpp.dimInactiveRegions": false
 }

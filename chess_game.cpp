@@ -339,11 +339,13 @@ void cgm::chess_game::save_game() {
     // Write heading of file in pgn format
     save_file << "[Event \"Pointless chess game\"]" << std::endl;
     save_file << "[Site \"Some computer somewhere\"]" << std::endl;
-    std::time_t ttime = time(0);
-    char* dt = std::ctime(&ttime);
-    std::string date_and_time(dt, 1);
-    date_and_time.pop_back(); // pop back necessary to remove \n
-    save_file << "[Date " + date_and_time + "]" << std::endl; 
+    std::time_t ttime;
+    std::time(&ttime);
+    std::tm date_and_time = *localtime(&ttime);
+    int year{date_and_time.tm_year + 1900};
+    int month{date_and_time.tm_mon};
+    int day{date_and_time.tm_mday};
+    save_file << "[Date \"" << year << "." << month << "." << day << "\" ]" << std::endl; 
     save_file << "[Round " << games_played << "]" << std::endl;
     save_file << "[White " << players[0]->get_name() << "]" << std::endl;
     save_file << "[Black " << players[1]->get_name() << "]" << std::endl;

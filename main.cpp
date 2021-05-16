@@ -21,6 +21,9 @@
 // - Removed uneccessary #includes
 // 10/05/2021
 // - Added functionality to save game in .pgn format
+// 15/05/2021
+// - Fixed bug where black player can go first
+// - Added functionality to load a saved chess game
 
 
 #include <string>
@@ -32,6 +35,7 @@
 
 // Function declarations
 int get_valid_input(int valid_input_one, int valid_input_two);
+bool ask_for_yes_or_no(std::string question, std::string invalid_input_response);
 
 
 int main() {
@@ -58,6 +62,19 @@ int main() {
     bool keep_playing{true};
     while (keep_playing) {
         cgm::chess_game game(player_one, player_two);
+
+        // Make sure that the white player goes first
+        if (player_one.get_piece_color() == pcs::black) {
+            game.get_next_player_ready();
+        }
+                
+        // Load a saved game if required by user
+        bool load_game = ask_for_yes_or_no("Would you like to load a saved game? (y/n) ",
+                                           "Were you not listening...? I said, WANT TO LOAD A GAME?!");
+        if (load_game) {
+            game.load_game();
+        }
+        
         std::cout << std::endl << game.get_chess_board() << std::endl;
 
         while (game.has_ended() == false) {
@@ -80,45 +97,17 @@ int main() {
 
         game.game_over();
 
-        while (true) {
-            std::cout << "Would you like to save this game? (y/n) ";
-            std::string save_game_input;
-            std::cin >> save_game_input;
-            if (save_game_input == "y" || save_game_input == "Y" ||
-                save_game_input == "yes" || save_game_input == "Yes") {
-
-                game.save_game();
-                break;
-            } else if (save_game_input == "n" || save_game_input == "N" ||
-                       save_game_input == "no" || save_game_input == "No") {
-            
-                break;
-            } else {
-                std::cout << "Were you not listening...? I said, WOULD YOU LIKE TO SAVE THIS GAME!" << std::endl;
-                std::cout << "Let's try this again..." << std::endl;
-            }
+        bool save_game{};
+        save_game = ask_for_yes_or_no("Would you like to save this game? (y/n) ",
+                                      "Were you not listening...? I said, WOULD YOU LIKE TO SAVE THIS GAME?!");
+        if (save_game) {
+            game.save_game();
         }
 
         keep_playing = false;
-        while (true) {
-            std::cout << "Fancy another game? (y/n) ";
-            std::string keep_playing_input;
-            std::cin >> keep_playing_input;
-            if (keep_playing_input == "y" || keep_playing_input == "Y" ||
-                keep_playing_input == "yes" || keep_playing_input == "Yes") {
+        keep_playing = ask_for_yes_or_no("Fancy another game? (y/n) ",
+                                         "Were you not listening...? I said, FANCY ANOTHER GAME?!");
 
-                keep_playing = true;
-                break;
-            } else if (keep_playing_input == "n" || keep_playing_input == "N" ||
-                       keep_playing_input == "no" || keep_playing_input == "No") {
-            
-                keep_playing = false;
-                break;
-            } else {
-                std::cout << "Were you not listening...? I said, FANCY ANOTHER GAME!" << std::endl;
-                std::cout << "Let's try this again..." << std::endl;
-            }
-        }
     }
 
     cgm::chess_game::display_stats(player_one.get_name(), player_two->get_name());
@@ -159,4 +148,24 @@ int get_valid_input(int valid_input_one, int valid_input_two) {
         }
     }
     return number_input;
+}
+
+bool ask_for_yes_or_no(std::string question, std::string invalid_input_response) {
+    while (true) {
+        std::cout << question;
+        std::string save_game_input;
+        std::cin >> save_game_input;
+        if (save_game_input == "y" || save_game_input == "Y" ||
+            save_game_input == "yes" || save_game_input == "Yes") {
+
+            return true;
+        } else if (save_game_input == "n" || save_game_input == "N" ||
+                   save_game_input == "no" || save_game_input == "No") {
+            
+            return false;
+        } else {
+            std::cout << invalid_input_response << std::endl;
+            std::cout << "Let's try this again..." << std::endl;
+        }
+    }    
 }

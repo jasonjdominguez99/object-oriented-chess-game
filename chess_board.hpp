@@ -50,13 +50,13 @@ namespace brd {
 
     public:
         board();
+        board(const board &board_to_copy);
         ~board() {};
 
         void move_piece(int initial_position, int final_position, move_type move);
         std::shared_ptr<pcs::chess_piece>& operator[](int idx);
-        std::vector<std::shared_ptr<pcs::chess_piece>> get_board() {
-            return chess_board;
-        }
+        std::vector<std::shared_ptr<pcs::chess_piece>> get_board();
+
     };  
 }
 

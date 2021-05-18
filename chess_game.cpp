@@ -31,6 +31,9 @@
 // 15/05/2021
 // - Added functionality to load a saved chess game
 // - Fixed bug with recording castling moves
+// 18/05/2021
+// - Fixed saving to account for ambiguous moves
+// - Fixed loading to account for all possible move formats
 
 
 #include <string>
@@ -99,6 +102,34 @@ void cgm::chess_game::current_player_make_a_move(bool in_check) {
     } else {
         if (chess_board[start_position_index]->get_symbol() != 'p') {
             move_name << chess_board[start_position_index]->get_symbol();
+        }
+        // For moves that can be made by multiple identical pieces from
+        // different starting positions (ambiguous), record starting position
+        std::vector<int> other_pieces_possible_moves{};
+        for (int i{} ; i < 8*8 ; i++) {
+            if (chess_board[i] && chess_board[i]->get_piece_color() == current_player->get_piece_color() && 
+                chess_board[i]->get_symbol() == chess_board[start_position_index]->get_symbol() &&
+                i != start_position_index) {
+                
+                std::vector<int> possible_final_positions;
+                possible_final_positions = chess_board[i]->get_valid_moves(i, chess_board.get_board());
+                if (possible_final_positions.size() == 0) {
+                    continue;
+                } else {
+                    other_pieces_possible_moves.insert(std::end(other_pieces_possible_moves), 
+                                                       std::begin(possible_final_positions),
+                                                       std::end(possible_final_positions));
+                }
+            }
+        }
+        // Find if any other moves by the same piece get to the same end position
+        bool move_is_ambiguous = std::find_if(other_pieces_possible_moves.begin(), 
+                                              other_pieces_possible_moves.end(),
+                                                  [end_position_index](int board_index) {
+                                                      return board_index == end_position_index;
+                                                  }) != other_pieces_possible_moves.end();
+        if (move_is_ambiguous) {
+            move_name << brd::board_index_to_position(start_position_index);
         }
         if (chess_board[end_position_index]) {
             // Move was a capture
@@ -177,7 +208,6 @@ void cgm::chess_game::promote_pawn_if_possible() {
 
             while (true) {
                 std::cout << "Please choose which of these pieces to which you want to promote your pawn: (N, B, R, Q)" << std::endl;
-                
                 std::string chosen_promotion_piece_symbol;
                 std::cin >> chosen_promotion_piece_symbol;
 
@@ -217,7 +247,7 @@ void cgm::chess_game::update_game_status() {
     std::vector<int> possible_next_moves;
 
     // See if check has occured (current player can capture the opposition king on their next turn)
-    possible_next_moves = get_all_possible_moves(current_player->get_piece_color(), chess_board.get_board());
+    possible_next_moves = pcs::get_all_possible_moves(current_player->get_piece_color(), chess_board.get_board());
     // Find if any of these moves will capture the opposition's king
     check_on_opposition = std::find_if(possible_next_moves.begin(), possible_next_moves.end(),
                                        [this](int board_index) {
@@ -456,12 +486,25 @@ void cgm::chess_game::load_game() {
     std::vector<std::string>::iterator move;
     for (move = first_move ; move < last_move ; ++move) {
         std::string loaded_move{*move};
-        
+        std::string unedited_loaded_move{loaded_move}; // deep copy to be added to moves_played
         char piece_to_move_symbol{};
         int start_position_index{-1};
         int end_position_index{};
         bool promotion_move{false};
+        char promotion_piece{};
         brd::move_type type_of_move{brd::standard};
+
+        // Remove check, capture or checkmate notation
+        // as it is not needed to recreate the move
+        if (loaded_move[loaded_move.length() - 1] == '+' ||
+            loaded_move[loaded_move.length() - 1] == '#') {
+
+            loaded_move.erase(loaded_move.begin() + loaded_move.length() - 1);
+        }
+        size_t x_pos{loaded_move.find('x')};
+        if (x_pos != std::string::npos) {
+            loaded_move.erase(loaded_move.begin() + x_pos);
+        }
 
         if (loaded_move == "O-O"|| loaded_move == "0-0") {
             // Move is kingside castling
@@ -489,33 +532,44 @@ void cgm::chess_game::load_game() {
             piece_to_move_symbol = 'p';
 
             std::vector<char> piece_symbols{'K','Q','B','N','R'};
-            if (loaded_move.find("e.p.")) {
+            std::string en_passant_notation{"e.p."};
+            size_t en_passant_pos = loaded_move.find(en_passant_notation);
+            
+            if (en_passant_pos != std::string::npos) {
                 type_of_move = brd::en_passant;
+                // Remove en passant notation from move
+                loaded_move.erase(en_passant_pos, en_passant_notation.length());
             } else if (std::any_of(std::begin(piece_symbols), 
                                    std::end(piece_symbols),
-                                   [&](const char& symbol){return loaded_move.find(symbol);})) {
+                                   [&](const char& symbol) {
+                                       return loaded_move.find(symbol) != std::string::npos;
+                                   })) {
                 
                 // Loaded move contains other piece symbol (not at the beginning)
-                // therfore it a pawn promotion move
+                // therefore it a pawn promotion move
                 promotion_move = true;
+                // Remove promotion notation from move and get promotion piece symbol
+                promotion_piece = loaded_move[loaded_move.length() - 1];
+                loaded_move.erase(loaded_move.length() - 2, 2);
             }
             
-            if (loaded_move.length() == 2 || loaded_move.length() == 3) {
-                end_position_index = brd::board_position_to_index(loaded_move.substr(0, 1));
-            } else if (loaded_move.length() == 4 || loaded_move.length() == 5) {
-                start_position_index = brd::board_position_to_index(loaded_move.substr(0, 1));
-                end_position_index = brd::board_position_to_index(loaded_move.substr(2, 3));
+            if (loaded_move.length() == 2) {
+                end_position_index = brd::board_position_to_index(loaded_move);
+            } else if (loaded_move.length() == 4) {
+                start_position_index = brd::board_position_to_index(loaded_move.substr(0, 2));
+                end_position_index = brd::board_position_to_index(loaded_move.substr(2, 2));
             } else {
                 std::cerr << "Invalid portable game notation" << std::endl;
                 exit(-1);
             }
         } else {
             piece_to_move_symbol = loaded_move[0];
-            if (loaded_move.length() == 3 || loaded_move.length() == 4) {
+            
+            if (loaded_move.length() == 3) {
                 end_position_index = brd::board_position_to_index(loaded_move.substr(1, 2));
-            } else if (loaded_move.length() == 5 || loaded_move.length() == 6) {
+            } else if (loaded_move.length() == 5) {
                 start_position_index = brd::board_position_to_index(loaded_move.substr(1, 2));
-                end_position_index = brd::board_position_to_index(loaded_move.substr(3, 4));
+                end_position_index = brd::board_position_to_index(loaded_move.substr(3, 2));
             } else {
                 std::cerr << "Invalid portable game notation" << std::endl;
                 exit(-1);
@@ -558,7 +612,7 @@ void cgm::chess_game::load_game() {
                 piece_valid_moves = chess_board[start_position_index]->get_valid_moves(start_position_index, 
                                                                                        chess_board.get_board());
                 // Find whether loaded move is possible
-                bool move_valid{false};
+                //move_valid = false;
                 if (std::find(piece_valid_moves.begin(), piece_valid_moves.end(),
                     end_position_index) != piece_valid_moves.end()) {
                     
@@ -572,7 +626,7 @@ void cgm::chess_game::load_game() {
         }
     
         // Record move
-        moves_played.push_back(loaded_move);
+        moves_played.push_back(unedited_loaded_move);
 
         chess_board.move_piece(start_position_index, end_position_index, type_of_move);
 

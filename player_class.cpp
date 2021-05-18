@@ -499,10 +499,13 @@ std::vector<std::pair<int, std::vector<int>>> plr::player::get_player_possible_m
 }
 
 
-std::vector<std::pair<int, std::vector<int>>> plr::player::get_player_piece_possible_moves(char chess_piece, brd::board& chess_board) {
+std::vector<std::pair<int, std::vector<int>>> plr::player::get_player_piece_possible_moves(char chess_piece, const brd::board& original_chess_board) {
+    // Deep copy original chess board to make temporary moves testing validity
+    brd::board chess_board{original_chess_board};
+    
     // Get all possible moves for all player's specified piece
     std::vector<std::pair<int, std::vector<int>>> all_possible_moves{};
-        
+    
     for (int i{} ; i < 8*8 ; i++) {
         if (chess_board[i] && chess_board[i]->get_piece_color() == this->piece_color && chess_board[i]->get_symbol() == chess_piece) {
             std::vector<int> possible_final_positions;
@@ -528,8 +531,8 @@ std::vector<std::pair<int, std::vector<int>>> plr::player::get_player_piece_poss
 
 
 std::pair<int, std::vector<int>> plr::player::get_piece_valid_moves(int start_position_index, 
-                                                    std::vector<int> possible_final_positions,
-                                                    brd::board& chess_board) {
+                                                                    std::vector<int> possible_final_positions,
+                                                                    brd::board& chess_board) {
     // For a king, must make sure that it is not being moved into check position
     if (chess_board[start_position_index]->get_symbol() == 'K') {
         // Also need to make sure castling won't be used to move

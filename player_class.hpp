@@ -56,7 +56,7 @@ namespace plr {
         virtual std::pair<int, int> choose_move(brd::board& chess_board)=0;
         virtual std::pair<int, int> choose_move_for_king(brd::board& chess_board)=0;
         std::vector<std::pair<int, std::vector<int>>> get_player_possible_moves(brd::board& chess_board);
-        std::vector<std::pair<int, std::vector<int>>> get_player_piece_possible_moves(char chess_piece, brd::board& chess_board);
+        std::vector<std::pair<int, std::vector<int>>> get_player_piece_possible_moves(char chess_piece, const brd::board& original_chess_board);
         std::pair<int, std::vector<int>> get_piece_valid_moves(int start_position_index, std::vector<int> possible_final_positions, brd::board& chess_board);
         void ask_for_name();
         void ask_for_color();

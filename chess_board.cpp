@@ -24,6 +24,8 @@
 // - Changed board positions to have lower case letters
 // 06/05/2021
 // - Removed using namespace to adhere to house style
+// 18/05/2021
+// - Implemented deep copying of chess board
 
 
 #include <sstream>
@@ -168,6 +170,30 @@ brd::board::board() {
     chess_board.push_back(std::make_shared<pcs::bishop>(pcs::bishop(pcs::black, 7*8 + 5)));
     chess_board.push_back(std::make_shared<pcs::knight>(pcs::knight(pcs::black, 7*8 + 6)));
     chess_board.push_back(std::make_shared<pcs::rook>(pcs::rook(pcs::black, 7*8 + 7)));
+}
+
+brd::board::board(const brd::board &board_to_copy) {
+    // Perform deep copy of all chess piece pointers in chess board to copies 
+    // chess board vector 
+    for (size_t i{0} ; i < 8*8 ; i++) {
+        if (!board_to_copy.chess_board[i]) {
+            chess_board.push_back(std::shared_ptr<pcs::chess_piece>{nullptr});
+        } else {
+            chess_board.push_back(board_to_copy.chess_board[i]->clone());
+        }
+    }
+}
+
+std::vector<std::shared_ptr<pcs::chess_piece>> brd::board::get_board() {
+    std::vector<std::shared_ptr<pcs::chess_piece>> copy_of_board{};
+    for (size_t i{0} ; i < 8*8 ; i++) {
+        if (!chess_board[i]) {
+            copy_of_board.push_back(std::shared_ptr<pcs::chess_piece>{nullptr});
+        } else {
+            copy_of_board.push_back(chess_board[i]->clone());
+        }
+    }
+    return copy_of_board;
 }
 
 void brd::board::move_piece(int initial_position, int final_position, move_type move) {

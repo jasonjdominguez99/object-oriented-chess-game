@@ -1,0 +1,13 @@
+[Event "Pointless chess game"]
+[Site "Some computer somewhere"]
+[Date "2021.4.18" ]
+[Round "1"]
+[White "Jason"]
+[Black "Sanchayata"]
+[Result "1-0"]
+1. c4 h5
+2. c5 a5
+3. c6 b7xc6
+4. Na3 h4
+5. Nb5 h3
+6. Nd6# 1-0

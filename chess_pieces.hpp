@@ -23,6 +23,9 @@
 // 02/05/2021
 // - Added private member variable to pawn class to say whether it can be
 //   captured via en passant
+// 18/05/2021
+// - Created clone function for pieces to help with deep copying of 
+//   chess board
 
 
 #ifndef CHESS_PIECES_H
@@ -75,6 +78,7 @@ namespace pcs {
         void has_been_moved() { has_moved = true; }
         bool is_en_passant_possible() { return en_passant_is_possible; }
         void set_en_passant_possibility(bool en_passant_possibility) { en_passant_is_possible = en_passant_possibility; }
+        virtual std::shared_ptr<chess_piece> clone() const = 0;
 
         chess_piece & operator=(chess_piece &chess_piece_to_copy) {
             if (&chess_piece_to_copy == this) return *this; // account for self-assignment
@@ -100,6 +104,10 @@ namespace pcs {
 
         // Member functions
         std::vector<int> get_valid_moves(int start_position, std::vector<std::shared_ptr<pcs::chess_piece>> chess_board);
+
+        std::shared_ptr<chess_piece> clone() const {
+            return std::make_shared<pawn>(pcs::pawn(this->piece_color, this->piece_id));
+        }
     };
 
     class rook : public chess_piece
@@ -113,6 +121,10 @@ namespace pcs {
 
         // Member functions
         std::vector<int> get_valid_moves(int start_position, std::vector<std::shared_ptr<pcs::chess_piece>> chess_board);
+
+        std::shared_ptr<chess_piece> clone() const {
+            return std::make_shared<rook>(pcs::rook(this->piece_color, this->piece_id));
+        }
     };
 
     class knight : public chess_piece
@@ -125,6 +137,10 @@ namespace pcs {
         virtual ~knight(){}
 
         std::vector<int> get_valid_moves(int start_position, std::vector<std::shared_ptr<pcs::chess_piece>> chess_board);
+
+        std::shared_ptr<chess_piece> clone() const {
+            return std::make_shared<knight>(pcs::knight(this->piece_color, this->piece_id));
+        }
     };
 
     class bishop : public chess_piece
@@ -137,6 +153,10 @@ namespace pcs {
         virtual ~bishop(){}
 
         std::vector<int> get_valid_moves(int start_position, std::vector<std::shared_ptr<pcs::chess_piece>> chess_board);
+
+        std::shared_ptr<chess_piece> clone() const {
+            return std::make_shared<bishop>(pcs::bishop(this->piece_color, this->piece_id));
+        }
     };
 
     class queen : public chess_piece
@@ -149,6 +169,10 @@ namespace pcs {
         virtual ~queen(){}
 
         std::vector<int> get_valid_moves(int start_position, std::vector<std::shared_ptr<pcs::chess_piece>> chess_board);
+
+        std::shared_ptr<chess_piece> clone() const {
+            return std::make_shared<queen>(pcs::queen(this->piece_color, this->piece_id));
+        }
     };
 
     class king : public chess_piece
@@ -161,6 +185,10 @@ namespace pcs {
         virtual ~king(){}
 
         std::vector<int> get_valid_moves(int start_position, std::vector<std::shared_ptr<pcs::chess_piece>> chess_board);
+
+        std::shared_ptr<chess_piece> clone() const {
+            return std::make_shared<king>(pcs::king(this->piece_color, this->piece_id));
+        }
     };
 }
 

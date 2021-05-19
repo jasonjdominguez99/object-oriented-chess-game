@@ -34,7 +34,7 @@ namespace cgm {
     enum game_status {active, 
                       check,
                       checkmate,
-                      resignation};
+                      draw};
     
     class chess_game
     {
@@ -63,13 +63,13 @@ namespace cgm {
         ~chess_game(){}
 
         // Member functions
-        std::shared_ptr<plr::player> get_current_player() {return current_player; }
+        std::shared_ptr<plr::player> get_current_player() { return current_player; }
         game_status get_game_status() { return status; }
         brd::board get_chess_board() { return chess_board; }
-        bool has_ended() { return status == checkmate || status == resignation; }
+        bool has_ended() { return status == checkmate || status == draw; }
 
         void get_next_player_ready();
-        void current_player_make_a_move(bool in_check);
+        bool current_player_make_a_move(bool in_check);
         void promote_pawn_if_possible();
         void update_game_status();
         void game_over();

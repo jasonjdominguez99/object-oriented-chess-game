@@ -16,6 +16,9 @@
 // - Removed using namespace to adhere to house style
 // 15/05/2021
 // - Added separate function to return all valid moves for a player
+// 19/05/2021
+// - Changed all chess piece related shared pointers to 
+//   unique, using move semantics for passing to funtions
 
 
 #ifndef PLAYER_H
@@ -53,11 +56,13 @@ namespace plr {
         virtual ~player(){}
 
         // Member functions
-        virtual std::pair<int, int> choose_move(brd::board& chess_board)=0;
-        virtual std::pair<int, int> choose_move_for_king(brd::board& chess_board)=0;
-        std::vector<std::pair<int, std::vector<int>>> get_player_possible_moves(brd::board& chess_board);
+        virtual std::pair<int, int> choose_move(const brd::board& chess_board)=0;
+        virtual std::pair<int, int> choose_move_for_king(const brd::board& chess_board)=0;
+        std::vector<std::pair<int, std::vector<int>>> get_player_possible_moves(const brd::board& chess_board);
         std::vector<std::pair<int, std::vector<int>>> get_player_piece_possible_moves(char chess_piece, const brd::board& original_chess_board);
-        std::pair<int, std::vector<int>> get_piece_valid_moves(int start_position_index, std::vector<int> possible_final_positions, brd::board& chess_board);
+        std::pair<int, std::vector<int>> get_piece_valid_moves(int start_position_index, 
+                                                               std::vector<int> possible_final_positions, 
+                                                               const brd::board& chess_board);
         void ask_for_name();
         void ask_for_color();
 
@@ -77,8 +82,8 @@ namespace plr {
         virtual ~human_player(){}
 
         // Member functions
-        std::pair<int, int> choose_move(brd::board& chess_board);
-        std::pair<int, int> choose_move_for_king(brd::board& chess_board);
+        std::pair<int, int> choose_move(const brd::board& chess_board);
+        std::pair<int, int> choose_move_for_king(const brd::board& chess_board);
     };
 
     class chess_bot : public player
@@ -90,8 +95,8 @@ namespace plr {
         virtual ~chess_bot(){}
 
         // Member functions
-        std::pair<int, int> choose_move(brd::board& chess_board);
-        std::pair<int, int> choose_move_for_king(brd::board& chess_board);
+        std::pair<int, int> choose_move(const brd::board& chess_board);
+        std::pair<int, int> choose_move_for_king(const brd::board& chess_board);
     };
 }
 

@@ -26,6 +26,9 @@
 // - Removed using namespace to adhere to house style
 // 18/05/2021
 // - Implemented deep copying of chess board
+// 19/05/2021
+// - Changed all chess piece related shared pointers to 
+//   unique, using move semantics for passing to funtions
 
 
 #include <sstream>
@@ -66,13 +69,17 @@ namespace brd {
         return output;
     }
 
-    std::shared_ptr<pcs::chess_piece>& board::operator[](int idx) { 
+    std::unique_ptr<pcs::chess_piece> board::operator[](int idx) const { 
         // Check for out of bound index
         if (idx > 63 && idx >= 0) {
             std::cerr << "Board index out of range, exiting.";
             exit(-1); 
         }
-        return chess_board[idx];
+        if (!chess_board[idx]) {
+            return std::move(std::unique_ptr<pcs::chess_piece>{nullptr});
+        } else {
+            return std::move(chess_board[idx]->clone());
+        }
     }
 
     int board_position_to_index(std::string position) {
@@ -138,38 +145,38 @@ namespace brd {
 brd::board::board() {
     // Initialize white pieces on chess board
     // starting from bottom left to top right
-    chess_board.push_back(std::make_shared<pcs::rook>(pcs::rook(pcs::white, 0)));
-    chess_board.push_back(std::make_shared<pcs::knight>(pcs::knight(pcs::white, 1)));
-    chess_board.push_back(std::make_shared<pcs::bishop>(pcs::bishop(pcs::white, 2)));
-    chess_board.push_back(std::make_shared<pcs::queen>(pcs::queen(pcs::white, 3)));
-    chess_board.push_back(std::make_shared<pcs::king>(pcs::king(pcs::white, 4)));
-    chess_board.push_back(std::make_shared<pcs::bishop>(pcs::bishop(pcs::white, 5)));
-    chess_board.push_back(std::make_shared<pcs::knight>(pcs::knight(pcs::white, 6)));
-    chess_board.push_back(std::make_shared<pcs::rook>(pcs::rook(pcs::white, 7)));
+    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::white, 0)));
+    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::white, 1)));
+    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::white, 2)));
+    chess_board.push_back(std::make_unique<pcs::queen>(pcs::queen(pcs::white, 3)));
+    chess_board.push_back(std::make_unique<pcs::king>(pcs::king(pcs::white, 4)));
+    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::white, 5)));
+    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::white, 6)));
+    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::white, 7)));
 
     for (size_t i{1*8} ; i < 2*8 ; i++) {
-        chess_board.push_back(std::make_shared<pcs::pawn>(pcs::pawn(pcs::white, i)));
+        chess_board.push_back(std::make_unique<pcs::pawn>(pcs::pawn(pcs::white, i)));
     }
 
     // Initialize unoccupied chess board squares
     // rows 3,4,5,6 (array elements 16-48)
     for (size_t i{2*8} ; i < 6*8 ; i++) {
-        chess_board.push_back(std::shared_ptr<pcs::chess_piece>{nullptr}); 
+        chess_board.push_back(std::unique_ptr<pcs::chess_piece>{nullptr}); 
     }
 
     // Initialize black pieces on chess board
     for (size_t i{6*8} ; i < 7*8 ; i++) {
-        chess_board.push_back(std::make_shared<pcs::pawn>(pcs::pawn(pcs::black, i)));
+        chess_board.push_back(std::make_unique<pcs::pawn>(pcs::pawn(pcs::black, i)));
     }
         
-    chess_board.push_back(std::make_shared<pcs::rook>(pcs::rook(pcs::black, 7*8)));
-    chess_board.push_back(std::make_shared<pcs::knight>(pcs::knight(pcs::black, 7*8 + 1)));
-    chess_board.push_back(std::make_shared<pcs::bishop>(pcs::bishop(pcs::black, 7*8 + 2)));
-    chess_board.push_back(std::make_shared<pcs::queen>(pcs::queen(pcs::black, 7*8 + 3)));
-    chess_board.push_back(std::make_shared<pcs::king>(pcs::king(pcs::black, 7*8 + 4)));
-    chess_board.push_back(std::make_shared<pcs::bishop>(pcs::bishop(pcs::black, 7*8 + 5)));
-    chess_board.push_back(std::make_shared<pcs::knight>(pcs::knight(pcs::black, 7*8 + 6)));
-    chess_board.push_back(std::make_shared<pcs::rook>(pcs::rook(pcs::black, 7*8 + 7)));
+    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::black, 7*8)));
+    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::black, 7*8 + 1)));
+    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::black, 7*8 + 2)));
+    chess_board.push_back(std::make_unique<pcs::queen>(pcs::queen(pcs::black, 7*8 + 3)));
+    chess_board.push_back(std::make_unique<pcs::king>(pcs::king(pcs::black, 7*8 + 4)));
+    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::black, 7*8 + 5)));
+    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::black, 7*8 + 6)));
+    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::black, 7*8 + 7)));
 }
 
 brd::board::board(const brd::board &board_to_copy) {
@@ -177,23 +184,23 @@ brd::board::board(const brd::board &board_to_copy) {
     // chess board vector 
     for (size_t i{0} ; i < 8*8 ; i++) {
         if (!board_to_copy.chess_board[i]) {
-            chess_board.push_back(std::shared_ptr<pcs::chess_piece>{nullptr});
+            chess_board.push_back(std::unique_ptr<pcs::chess_piece>{nullptr});
         } else {
             chess_board.push_back(board_to_copy.chess_board[i]->clone());
         }
     }
 }
 
-std::vector<std::shared_ptr<pcs::chess_piece>> brd::board::get_board() {
-    std::vector<std::shared_ptr<pcs::chess_piece>> copy_of_board{};
+std::vector<std::unique_ptr<pcs::chess_piece>> brd::board::get_board() const {
+    std::vector<std::unique_ptr<pcs::chess_piece>> copy_of_board{};
     for (size_t i{0} ; i < 8*8 ; i++) {
         if (!chess_board[i]) {
-            copy_of_board.push_back(std::shared_ptr<pcs::chess_piece>{nullptr});
+            copy_of_board.push_back(std::unique_ptr<pcs::chess_piece>{nullptr});
         } else {
             copy_of_board.push_back(chess_board[i]->clone());
         }
     }
-    return copy_of_board;
+    return std::move(copy_of_board);
 }
 
 void brd::board::move_piece(int initial_position, int final_position, move_type move) {

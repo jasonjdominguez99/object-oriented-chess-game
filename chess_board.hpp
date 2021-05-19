@@ -16,6 +16,9 @@
 //   changing a chess piece
 // - Created enum for move types to allow for en passant
 //   and castling functionality
+// 19/05/2021
+// - Changed all chess piece related shared pointers to 
+//   unique, using move semantics for passing to funtions
 
 
 #ifndef CHESS_BOARD_H
@@ -46,7 +49,7 @@ namespace brd {
         friend std::ostream & operator<<(std::ostream &output, const board &b);
 
     private:
-        std::vector<std::shared_ptr<pcs::chess_piece>> chess_board;
+        std::vector<std::unique_ptr<pcs::chess_piece>> chess_board;
 
     public:
         board();
@@ -54,8 +57,8 @@ namespace brd {
         ~board() {};
 
         void move_piece(int initial_position, int final_position, move_type move);
-        std::shared_ptr<pcs::chess_piece>& operator[](int idx);
-        std::vector<std::shared_ptr<pcs::chess_piece>> get_board();
+        std::unique_ptr<pcs::chess_piece> operator[](int idx) const;
+        std::vector<std::unique_ptr<pcs::chess_piece>> get_board() const;
 
     };  
 }

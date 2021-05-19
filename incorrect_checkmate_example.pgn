@@ -1,0 +1,13 @@
+[Event "Pointless chess game"]
+[Site "Some computer somewhere"]
+[Date "2021.4.18" ]
+[Round "1"]
+[White "Jason"]
+[Black "ChessBot"]
+[Result "1-0"]
+1. Na3 Na6
+2. Nb5 d6
+3. g3 Bg4
+4. Bh3 h5
+5. Bxg4 h4
+6. Nxd6# 1-0

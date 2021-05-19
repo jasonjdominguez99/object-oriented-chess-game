@@ -34,6 +34,10 @@
 // 18/05/2021
 // - Fixed saving to account for ambiguous moves
 // - Fixed loading to account for all possible move formats
+// 19/05/2021
+// - Added the functionality to quit the game and draw
+// - Changed all chess piece related shared pointers to 
+//   unique, using move semantics for passing to funtions
 
 
 #include <string>
@@ -65,12 +69,16 @@ void cgm::chess_game::get_next_player_ready() {
     }
 }
 
-void cgm::chess_game::current_player_make_a_move(bool in_check) {
+bool cgm::chess_game::current_player_make_a_move(bool in_check) {
     std::pair<int, int> move;
-    if (in_check) {
-        move = current_player->choose_move_for_king(chess_board);
-    } else {
-        move = current_player->choose_move(chess_board);
+    try {
+        if (in_check) {
+            move = current_player->choose_move_for_king(chess_board);
+        } else {
+            move = current_player->choose_move(chess_board);
+        }
+    } catch (bool quit_game) {
+        return quit_game;
     }
     int start_position_index = move.first;
     int end_position_index = move.second;
@@ -112,7 +120,7 @@ void cgm::chess_game::current_player_make_a_move(bool in_check) {
                 i != start_position_index) {
                 
                 std::vector<int> possible_final_positions;
-                possible_final_positions = chess_board[i]->get_valid_moves(i, chess_board.get_board());
+                possible_final_positions = chess_board[i]->get_valid_moves(i, std::move(chess_board.get_board()));
                 if (possible_final_positions.size() == 0) {
                     continue;
                 } else {
@@ -183,6 +191,8 @@ void cgm::chess_game::current_player_make_a_move(bool in_check) {
             chess_board[end_position_index + 1]->has_been_moved();
         }
     }
+
+    return false;
 }
 
 
@@ -212,16 +222,16 @@ void cgm::chess_game::promote_pawn_if_possible() {
                 std::cin >> chosen_promotion_piece_symbol;
 
                 if (chosen_promotion_piece_symbol == "N") {
-                    chess_board[pawn_to_promote_index] = std::move(std::make_shared<pcs::knight>(pcs::knight(current_player->get_piece_color(), old_pawn_id)));
+                    chess_board[pawn_to_promote_index] = std::move(std::make_unique<pcs::knight>(pcs::knight(current_player->get_piece_color(), old_pawn_id)));
                     break;
                 } else if (chosen_promotion_piece_symbol == "B") {
-                    chess_board[pawn_to_promote_index] = std::move(std::make_shared<pcs::bishop>(pcs::bishop(current_player->get_piece_color(), old_pawn_id)));
+                    chess_board[pawn_to_promote_index] = std::move(std::make_unique<pcs::bishop>(pcs::bishop(current_player->get_piece_color(), old_pawn_id)));
                     break;
                 } else if (chosen_promotion_piece_symbol == "R") {
-                    chess_board[pawn_to_promote_index] = std::move(std::make_shared<pcs::rook>(pcs::rook(current_player->get_piece_color(), old_pawn_id)));
+                    chess_board[pawn_to_promote_index] = std::move(std::make_unique<pcs::rook>(pcs::rook(current_player->get_piece_color(), old_pawn_id)));
                     break;
                 } else if (chosen_promotion_piece_symbol == "Q") {
-                    chess_board[pawn_to_promote_index] = std::move(std::make_shared<pcs::queen>(pcs::queen(current_player->get_piece_color(), old_pawn_id)));
+                    chess_board[pawn_to_promote_index] = std::move(std::make_unique<pcs::queen>(pcs::queen(current_player->get_piece_color(), old_pawn_id)));
                     break;
                 } else {
                     std::cout << "You MUST promote to one of these pieces (N, B, R, Q)" << std::endl;
@@ -247,7 +257,7 @@ void cgm::chess_game::update_game_status() {
     std::vector<int> possible_next_moves;
 
     // See if check has occured (current player can capture the opposition king on their next turn)
-    possible_next_moves = pcs::get_all_possible_moves(current_player->get_piece_color(), chess_board.get_board());
+    possible_next_moves = pcs::get_all_possible_moves(current_player->get_piece_color(), std::move(chess_board.get_board()));
     // Find if any of these moves will capture the opposition's king
     check_on_opposition = std::find_if(possible_next_moves.begin(), possible_next_moves.end(),
                                        [this](int board_index) {
@@ -272,7 +282,7 @@ void cgm::chess_game::update_game_status() {
             }
         }
         std::vector<int> opposition_king_possible_moves;
-        opposition_king_possible_moves = chess_board[opposition_king_board_index]->get_valid_moves(opposition_king_board_index, chess_board.get_board());
+        opposition_king_possible_moves = chess_board[opposition_king_board_index]->get_valid_moves(opposition_king_board_index, std::move(chess_board.get_board()));
         
         // See if king has possible moves to escape capture
         std::vector<int>::iterator first_new_position{opposition_king_possible_moves.begin()};
@@ -281,12 +291,12 @@ void cgm::chess_game::update_game_status() {
         std::vector<int> moves_to_remove;
         for (possible_final_position = first_new_position ; possible_final_position < last_new_position ; ++possible_final_position) {
             // Make each of the possible king moves on a copy of the current chess board
-            std::vector<std::shared_ptr<pcs::chess_piece>> chess_board_after_possible_next_move{chess_board.get_board()};
+            std::vector<std::unique_ptr<pcs::chess_piece>> chess_board_after_possible_next_move{std::move(chess_board.get_board())};
 
             chess_board_after_possible_next_move[*possible_final_position] = std::move(chess_board_after_possible_next_move[opposition_king_board_index]);
             chess_board_after_possible_next_move[*possible_final_position]->has_been_moved();
 
-            std::vector<int> opposition_possible_moves = get_all_possible_moves(this->current_player->get_piece_color(), chess_board_after_possible_next_move);
+            std::vector<int> opposition_possible_moves = get_all_possible_moves(this->current_player->get_piece_color(), std::move(chess_board_after_possible_next_move));
 
             // If this possible final move for the king was found in possible opposition moves then
             // it can be captured, therefore we will remove this from possible moves for this king
@@ -340,9 +350,30 @@ void cgm::chess_game::game_over() {
         std::cout << "Winner: " << players[0]->get_name() << std::endl;
         std::cout << "Loser: " << players[1]->get_name() << std::endl;
         ++player_one_wins;
-    } else {
-        std::cout << "Draw" << std::endl;
-        ++draws;
+    } else if (this->status == active) {
+        while (true) {
+            std::cout << "Do you want to count that game as a draw (y/n)?" << std::endl;
+            std::string input;
+            std::cin >> input;
+            if (input == "y") {
+                std::cout << std::endl << "Draw!" << std::endl;
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                ++draws;
+                status = draw;
+                break;
+            } else if (input == "n") {
+                std::cout << std::endl << "Game unfinished" << std::endl;
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                break;
+            } else {
+                std::cout << "" << std::endl;
+                std::cout << "Let's try this again..." << std::endl;
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            }
+        }
     }
 }
 
@@ -358,7 +389,7 @@ void cgm::chess_game::display_stats(std::string player_one_name, std::string pla
     } else if (player_one_wins < player_two_wins) {
         std::cout << player_two_name << " is the overall winner, congrats!" << std::endl;
     } else {
-        std::cout << "Overal a draw... pretty boring..." << std::endl;
+        std::cout << "Overall a draw... pretty boring..." << std::endl;
     }
     std::cout << "--------------------------------------" << std::endl;
 }
@@ -396,8 +427,9 @@ void cgm::chess_game::save_game() {
         } else if (current_player->get_piece_color() != pcs::black) {
             save_file << "[Result \"0-1\"]" << std::endl;
         }
+    } else if (status == draw) {
+        save_file << "[Result \"1/2-1/2\"]" << std::endl;
     } else {
-        // Game unfinished
         save_file << "[Result \"*\"]" << std::endl;
     }
 
@@ -423,9 +455,10 @@ void cgm::chess_game::save_game() {
         } else if (current_player->get_piece_color() != pcs::black) {
             save_file << "0-1";
         }
-
-    save_file.close();
+    } else if (status == draw) {
+        save_file << "1/2-1/2";
     }
+    save_file.close();
 }
 
 void cgm::chess_game::load_game() {
@@ -581,7 +614,8 @@ void cgm::chess_game::load_game() {
             // Start position of move wasn't included in notation
             // Find start position of move
             std::vector<std::pair<int, std::vector<int>>> player_possible_moves{};
-            player_possible_moves = current_player->get_player_piece_possible_moves(piece_to_move_symbol, chess_board);
+            brd::board copy_of_board{chess_board};
+            player_possible_moves = current_player->get_player_piece_possible_moves(piece_to_move_symbol, std::move(copy_of_board));
             std::vector<std::pair<int, std::vector<int>>>::iterator first_possible_piece_and_moves{player_possible_moves.begin()};
             std::vector<std::pair<int, std::vector<int>>>::iterator last_possible_piece_and_moves{player_possible_moves.end()};
             std::vector<std::pair<int, std::vector<int>>>::iterator piece_and_moves;
@@ -610,7 +644,7 @@ void cgm::chess_game::load_game() {
             } else {
                 std::vector<int> piece_valid_moves{};
                 piece_valid_moves = chess_board[start_position_index]->get_valid_moves(start_position_index, 
-                                                                                       chess_board.get_board());
+                                                                                       std::move(chess_board.get_board()));
                 // Find whether loaded move is possible
                 //move_valid = false;
                 if (std::find(piece_valid_moves.begin(), piece_valid_moves.end(),
@@ -670,20 +704,25 @@ void cgm::chess_game::load_game() {
 
         if (promotion_move) {
             // Promote pawn
-            char promotion_piece_symbol{loaded_move.back()};
+            std::cout << "Here first!" << std::endl;
             int old_pawn_id{chess_board[end_position_index]->get_id()};
-            if (promotion_piece_symbol == 'N') {
-                chess_board[end_position_index] = std::move(std::make_shared<pcs::knight>(pcs::knight(current_player->get_piece_color(), 
-                                                                                                      old_pawn_id)));
-            } else if (promotion_piece_symbol == 'B') {
-                chess_board[end_position_index] = std::move(std::make_shared<pcs::bishop>(pcs::bishop(current_player->get_piece_color(), 
-                                                                                                      old_pawn_id)));
-            } else if (promotion_piece_symbol == 'R') {
-                chess_board[end_position_index] = std::move(std::make_shared<pcs::rook>(pcs::rook(current_player->get_piece_color(),
-                                                                                                  old_pawn_id)));
-            } else if (promotion_piece_symbol == 'Q') {
-                chess_board[end_position_index] = std::move(std::make_shared<pcs::queen>(pcs::queen(current_player->get_piece_color(),
-                                                                                                    old_pawn_id)));
+            if (promotion_piece == 'N') {
+                chess_board[end_position_index] = std::move(std::make_unique<pcs::knight>(pcs::knight(current_player->get_piece_color(), 
+                                                                                                      old_pawn_id,
+                                                                                                      true, false)));
+            } else if (promotion_piece == 'B') {
+                chess_board[end_position_index] = std::move(std::make_unique<pcs::bishop>(pcs::bishop(current_player->get_piece_color(), 
+                                                                                                      old_pawn_id,
+                                                                                                      true, false)));
+            } else if (promotion_piece == 'R') {
+                chess_board[end_position_index] = std::move(std::make_unique<pcs::rook>(pcs::rook(current_player->get_piece_color(),
+                                                                                                  old_pawn_id,
+                                                                                                  true, false)));
+            } else if (promotion_piece == 'Q') {
+                std::cout << "Here!" << std::endl;
+                chess_board[end_position_index] = std::move(std::make_unique<pcs::queen>(pcs::queen(current_player->get_piece_color(),
+                                                                                                    old_pawn_id,
+                                                                                                    true, false)));
             }
 
             chess_board[end_position_index]->has_been_moved(); 

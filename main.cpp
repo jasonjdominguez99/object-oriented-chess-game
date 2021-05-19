@@ -24,10 +24,13 @@
 // 15/05/2021
 // - Fixed bug where black player can go first
 // - Added functionality to load a saved chess game
+// 19/05/2021
+// - Added the functionality to quit the game and draw
 
 
 #include <string>
 #include <memory>
+#include <limits>
 #include "chess_pieces.hpp"
 #include "player_class.hpp"
 #include "chess_game.hpp"
@@ -77,16 +80,19 @@ int main() {
         
         std::cout << std::endl << game.get_chess_board() << std::endl;
 
-        while (game.has_ended() == false) {
+        bool quit_game{false};
+        while (game.has_ended() == false && quit_game == false) {
             bool in_check;
             if (game.get_game_status() == cgm::check) {
-                std::cout << "QUICK! " << game.get_current_player()->get_name() << ", you must move your must move your king!" << std::endl;
+                std::cout << "QUICK! " << game.get_current_player()->get_name() << ", you must move your must protect your king!" << std::endl;
                 in_check = true;
             } else {
                 in_check = false;
             }
-
-            game.current_player_make_a_move(in_check);
+            
+            quit_game = game.current_player_make_a_move(in_check);
+            if (quit_game) { break; 
+            }
             std::cout << std::endl << game.get_chess_board() << std::endl;
 
             game.promote_pawn_if_possible();
@@ -157,15 +163,21 @@ bool ask_for_yes_or_no(std::string question, std::string invalid_input_response)
         std::cin >> save_game_input;
         if (save_game_input == "y" || save_game_input == "Y" ||
             save_game_input == "yes" || save_game_input == "Yes") {
-
+            
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             return true;
         } else if (save_game_input == "n" || save_game_input == "N" ||
                    save_game_input == "no" || save_game_input == "No") {
             
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             return false;
         } else {
             std::cout << invalid_input_response << std::endl;
             std::cout << "Let's try this again..." << std::endl;
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }
-    }    
+    } 
 }

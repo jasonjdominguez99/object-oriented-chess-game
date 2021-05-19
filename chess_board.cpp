@@ -28,7 +28,7 @@
 // - Implemented deep copying of chess board
 // 19/05/2021
 // - Changed all chess piece related shared pointers to 
-//   unique, using move semantics for passing to funtions
+//   unique, using move semantics for passing to functions
 
 
 #include <sstream>

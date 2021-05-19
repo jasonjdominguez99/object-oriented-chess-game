@@ -18,7 +18,7 @@
 //   and castling functionality
 // 19/05/2021
 // - Changed all chess piece related shared pointers to 
-//   unique, using move semantics for passing to funtions
+//   unique, using move semantics for passing to functions
 
 
 #ifndef CHESS_BOARD_H

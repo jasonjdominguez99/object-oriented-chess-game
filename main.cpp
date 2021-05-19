@@ -91,8 +91,7 @@ int main() {
             }
             
             quit_game = game.current_player_make_a_move(in_check);
-            if (quit_game) { break; 
-            }
+            if (quit_game) { break; }
             std::cout << std::endl << game.get_chess_board() << std::endl;
 
             game.promote_pawn_if_possible();
@@ -155,6 +154,7 @@ int get_valid_input(int valid_input_one, int valid_input_two) {
     }
     return number_input;
 }
+
 
 bool ask_for_yes_or_no(std::string question, std::string invalid_input_response) {
     while (true) {

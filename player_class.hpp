@@ -18,7 +18,7 @@
 // - Added separate function to return all valid moves for a player
 // 19/05/2021
 // - Changed all chess piece related shared pointers to 
-//   unique, using move semantics for passing to funtions
+//   unique, using move semantics for passing to functions
 
 
 #ifndef PLAYER_H
@@ -57,7 +57,6 @@ namespace plr {
 
         // Member functions
         virtual std::pair<int, int> choose_move(const brd::board& chess_board)=0;
-        virtual std::pair<int, int> choose_move_for_king(const brd::board& chess_board)=0;
         std::vector<std::pair<int, std::vector<int>>> get_player_possible_moves(const brd::board& chess_board);
         std::vector<std::pair<int, std::vector<int>>> get_player_piece_possible_moves(char chess_piece, const brd::board& original_chess_board);
         std::pair<int, std::vector<int>> get_piece_valid_moves(int start_position_index, 
@@ -71,6 +70,7 @@ namespace plr {
         bool get_is_human() { return is_human; }
     };
 
+
     class human_player : public player
     {
     public:
@@ -83,8 +83,8 @@ namespace plr {
 
         // Member functions
         std::pair<int, int> choose_move(const brd::board& chess_board);
-        std::pair<int, int> choose_move_for_king(const brd::board& chess_board);
     };
+
 
     class chess_bot : public player
     {
@@ -96,7 +96,6 @@ namespace plr {
 
         // Member functions
         std::pair<int, int> choose_move(const brd::board& chess_board);
-        std::pair<int, int> choose_move_for_king(const brd::board& chess_board);
     };
 }
 

@@ -31,11 +31,13 @@ namespace brd {
 
 // Class and function definitions
 namespace cgm {
+    
     enum game_status {active, 
                       check,
                       checkmate,
                       draw};
     
+
     class chess_game
     {
     private:
@@ -67,7 +69,6 @@ namespace cgm {
         game_status get_game_status() { return status; }
         brd::board get_chess_board() { return chess_board; }
         bool has_ended() { return status == checkmate || status == draw; }
-
         void get_next_player_ready();
         bool current_player_make_a_move(bool in_check);
         void promote_pawn_if_possible();

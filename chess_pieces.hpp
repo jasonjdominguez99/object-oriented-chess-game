@@ -28,7 +28,7 @@
 //   chess board
 // 19/05/2021
 // - Changed all chess piece related shared pointers to 
-//   unique, using move semantics for passing to funtions
+//   unique, using move semantics for passing to functions
 
 
 #ifndef CHESS_PIECES_H
@@ -38,6 +38,7 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <tuple>
 
 
 // Class and function definitions
@@ -96,7 +97,7 @@ namespace pcs {
         virtual std::vector<int> get_valid_moves(int start_position, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board)=0;
     };
 
-    std::vector<int> get_all_possible_moves(color piece_color, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board);
+    std::tuple<std::vector<int>, std::vector<std::vector<int>>, std::vector<int>> get_all_possible_moves(color piece_color, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board);
 
     class pawn : public chess_piece
     {

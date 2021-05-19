@@ -43,7 +43,7 @@
 // - Removed using namespace to adhere to house style
 // 19/05/2021
 // - Changed all chess piece related shared pointers to 
-//   unique, using move semantics for passing to funtions
+//   unique, using move semantics for passing to functions
 
 
 #include <iostream>
@@ -51,6 +51,7 @@
 #include <vector>
 #include <memory>
 #include <iterator>
+#include <tuple>
 #include "chess_pieces.hpp"
 
 
@@ -99,8 +100,11 @@ namespace pcs {
         }
     }
 
-    std::vector<int> get_all_possible_moves(color piece_color, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board) {
-        std::vector<int> all_possible_moves;
+    std::tuple<std::vector<int>, std::vector<std::vector<int>>, std::vector<int>> get_all_possible_moves(color piece_color, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board) {
+        // Want to return possible positions of piece to move, possible moves for each and all possible moves
+        std::vector<int> possible_start_positions{};
+        std::vector<std::vector<int>> possible_moves_per_piece{};
+        std::vector<int> all_possible_moves{};
         for (int i{} ; i < 8*8 ; i++) {
             if (chess_board[i] && chess_board[i]->get_piece_color() == piece_color) {
                 std::vector<int> piece_possible_moves;
@@ -114,14 +118,16 @@ namespace pcs {
                     }
                 }
                 piece_possible_moves = chess_board[i]->get_valid_moves(i, std::move(copy_of_board));
-            
+
+                possible_start_positions.push_back(i);
+                possible_moves_per_piece.push_back(piece_possible_moves);
                 all_possible_moves.insert(std::end(all_possible_moves), 
-                                          std::begin(piece_possible_moves),
+                                          std::begin(piece_possible_moves), 
                                           std::end(piece_possible_moves));
             }
         }
 
-        return all_possible_moves;
+        return std::make_tuple(possible_start_positions, possible_moves_per_piece, all_possible_moves);
     }
 }
 

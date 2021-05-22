@@ -4,31 +4,6 @@
 // function definitions
 // 
 // Author: Jason Dominguez
-// Created: 23/04/2021
-// Last modified: 
-// 24/04/2021 
-// - Labelling of board (letters and numbers) corrected
-// - Improved display of board with new letters and number
-//   and flipped to be 1 at bottom 8 at top
-// 25/04/2021
-// - Changed raw pointers to smart shared_ptr pointer
-// - Started using vector for chess board rather than array
-// - Implemented using move semantics when moving chess
-//   pieces
-// 26/04/2021
-// - Simplified move_piece method by removing uneccessary if-else
-// 02/05/2021
-// - Changed move_piece method to be compatible with en passant and 
-//   castling moves
-// 03/05/2021
-// - Changed board positions to have lower case letters
-// 06/05/2021
-// - Removed using namespace to adhere to house style
-// 18/05/2021
-// - Implemented deep copying of chess board
-// 19/05/2021
-// - Changed all chess piece related shared pointers to 
-//   unique, using move semantics for passing to functions
 
 
 #include <sstream>
@@ -69,6 +44,7 @@ namespace brd {
         return output;
     }
 
+
     std::unique_ptr<pcs::chess_piece> board::operator[](int idx) const { 
         // Check for out of bound index
         if (idx > 63 && idx >= 0) {
@@ -81,6 +57,17 @@ namespace brd {
             return std::move(chess_board[idx]->clone());
         }
     }
+
+
+    std::unique_ptr<pcs::chess_piece> & board::operator[](int idx) { 
+        // Check for out of bound index
+        if (idx > 63 && idx >= 0) {
+            std::cerr << "Board index out of range, exiting.";
+            exit(-1); 
+        }
+        return chess_board[idx];
+    }
+
 
     int board_position_to_index(std::string position) {
         char col_letter = position[0];
@@ -113,6 +100,7 @@ namespace brd {
         return position_index;
     }
 
+
     std::string board_index_to_position(int position_index) {
         int row_number = position_index/8 + 1;
         int column_number = position_index%8 + 1;
@@ -141,6 +129,7 @@ namespace brd {
         return position;
     }
 }
+
 
 brd::board::board() {
     // Initialize white pieces on chess board
@@ -179,6 +168,7 @@ brd::board::board() {
     chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::black, 7*8 + 7)));
 }
 
+
 brd::board::board(const brd::board &board_to_copy) {
     // Perform deep copy of all chess piece pointers in chess board to copies 
     // chess board vector 
@@ -191,6 +181,48 @@ brd::board::board(const brd::board &board_to_copy) {
     }
 }
 
+
+void brd::board::reset() {
+    // Clear current chess board
+    chess_board.clear();
+
+    // Initialize white pieces on chess board
+    // starting from bottom left to top right
+    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::white, 0)));
+    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::white, 1)));
+    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::white, 2)));
+    chess_board.push_back(std::make_unique<pcs::queen>(pcs::queen(pcs::white, 3)));
+    chess_board.push_back(std::make_unique<pcs::king>(pcs::king(pcs::white, 4)));
+    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::white, 5)));
+    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::white, 6)));
+    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::white, 7)));
+
+    for (size_t i{1*8} ; i < 2*8 ; i++) {
+        chess_board.push_back(std::make_unique<pcs::pawn>(pcs::pawn(pcs::white, i)));
+    }
+
+    // Initialize unoccupied chess board squares
+    // rows 3,4,5,6 (array elements 16-48)
+    for (size_t i{2*8} ; i < 6*8 ; i++) {
+        chess_board.push_back(std::unique_ptr<pcs::chess_piece>{nullptr}); 
+    }
+
+    // Initialize black pieces on chess board
+    for (size_t i{6*8} ; i < 7*8 ; i++) {
+        chess_board.push_back(std::make_unique<pcs::pawn>(pcs::pawn(pcs::black, i)));
+    }
+        
+    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::black, 7*8)));
+    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::black, 7*8 + 1)));
+    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::black, 7*8 + 2)));
+    chess_board.push_back(std::make_unique<pcs::queen>(pcs::queen(pcs::black, 7*8 + 3)));
+    chess_board.push_back(std::make_unique<pcs::king>(pcs::king(pcs::black, 7*8 + 4)));
+    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::black, 7*8 + 5)));
+    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::black, 7*8 + 6)));
+    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::black, 7*8 + 7)));
+}
+
+
 std::vector<std::unique_ptr<pcs::chess_piece>> brd::board::get_board() const {
     std::vector<std::unique_ptr<pcs::chess_piece>> copy_of_board{};
     for (size_t i{0} ; i < 8*8 ; i++) {
@@ -202,6 +234,7 @@ std::vector<std::unique_ptr<pcs::chess_piece>> brd::board::get_board() const {
     }
     return std::move(copy_of_board);
 }
+
 
 void brd::board::move_piece(int initial_position, int final_position, move_type move) {
     if (move == standard) {
@@ -220,13 +253,9 @@ void brd::board::move_piece(int initial_position, int final_position, move_type 
         chess_board[final_position] = std::move(chess_board[initial_position]);
         
     } else if (move == castling) {
-        if (chess_board[initial_position]->get_symbol() == 'K' && chess_board[initial_position + 3]->get_symbol() == 'R' &&
-            !chess_board[final_position] && !chess_board[final_position - 1]) {
-
+        if (chess_board[initial_position]->get_symbol() == 'K' && final_position > initial_position) {
             chess_board[final_position - 1] = std::move(chess_board[initial_position + 3]); // Move rook
-        } else if (chess_board[initial_position]->get_symbol() == 'K' && chess_board[initial_position - 4]->get_symbol() == 'R'&&
-            !chess_board[final_position] && !chess_board[final_position + 1]) {
-
+        } else if (chess_board[initial_position]->get_symbol() == 'K' && final_position < initial_position) {
             chess_board[final_position + 1] = std::move(chess_board[initial_position - 4]); // Move rook
         } else {
             std::cerr << "Invalid castling move, exiting.";
@@ -238,5 +267,4 @@ void brd::board::move_piece(int initial_position, int final_position, move_type 
         std::cerr << "Invalid move type, exiting.";
         exit(-1); 
     }
-    
 }

@@ -3,22 +3,6 @@
 // Header file for player class
 // 
 // Author: Jason Dominguez
-// Created: 23/04/2021
-// Last modified:
-// 30/04/2021
-// - Restructured entire code to include chess_game class
-//   still capable of the same functionality, but now
-//   able to start on chess engine
-// 01/05/2021
-// - Added chess_bot functionality to randomly select
-//   possible moves using random seed
-// 06/05/2021
-// - Removed using namespace to adhere to house style
-// 15/05/2021
-// - Added separate function to return all valid moves for a player
-// 19/05/2021
-// - Changed all chess piece related shared pointers to 
-//   unique, using move semantics for passing to functions
 
 
 #ifndef PLAYER_H
@@ -46,8 +30,9 @@ namespace plr {
         player() {}
         player(pcs::color player_color) : piece_color{player_color} {}
         player(bool human_or_not) : is_human{human_or_not} {}
-        player(std::string player_name, pcs::color player_color, bool human_or_not) :
-            name{player_name}, piece_color{player_color}, is_human{human_or_not} {}
+        player(std::string player_name, pcs::color player_color, bool human_or_not) : name{player_name}, 
+                                                                                      piece_color{player_color}, 
+                                                                                      is_human{human_or_not} {}
         player(player &player_to_copy) {
             name = player_to_copy.name;
             piece_color = player_to_copy.piece_color;
@@ -58,7 +43,8 @@ namespace plr {
         // Member functions
         virtual std::pair<int, int> choose_move(const brd::board& chess_board)=0;
         std::vector<std::pair<int, std::vector<int>>> get_player_possible_moves(const brd::board& chess_board);
-        std::vector<std::pair<int, std::vector<int>>> get_player_piece_possible_moves(char chess_piece, const brd::board& original_chess_board);
+        std::vector<std::pair<int, std::vector<int>>> get_player_piece_possible_moves(char chess_piece, 
+                                                                                      const brd::board& original_chess_board);
         std::pair<int, std::vector<int>> get_piece_valid_moves(int start_position_index, 
                                                                std::vector<int> possible_final_positions, 
                                                                const brd::board& chess_board);

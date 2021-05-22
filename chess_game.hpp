@@ -3,19 +3,14 @@
 // Header file for chess game class
 // 
 // Author: Jason Dominguez
-// Created: 27/04/2021
-// Last modified:
-// 30/04/2021
-// - Restructured entire code to include chess_game class
-//   still capable of the same functionality, but now
-//   able to start on chess engine
-// 06/05/2021
-// - Removed uneccessary #includes
+
 
 #ifndef CHESS_GAME_H
 #define CHESS_GAME_H
 
 
+#include <string>
+#include <tuple>
 #include "chess_board.hpp"
 
 
@@ -31,12 +26,13 @@ namespace brd {
 
 // Class and function definitions
 namespace cgm {
-    
     enum game_status {active, 
                       check,
                       checkmate,
                       draw};
     
+    std::vector<std::string> read_pgn(std::string file_name);
+    std::tuple<char, int, int, bool, char, brd::move_type> parse_pgn_move_notation(std::string loaded_move, pcs::color player_color);
 
     class chess_game
     {

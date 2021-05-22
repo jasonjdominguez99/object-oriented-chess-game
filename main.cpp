@@ -3,29 +3,6 @@
 // Main chess game program (previously chess_game.cpp)
 // 
 // Author: Jason Dominguez
-// Created: 27/04/2021
-// Last modified: 
-// 27/04/2021
-// - Changed file organization to have a main.cpp
-//   and separate chess_game.hpp and chess_game.cpp files
-// 30/04/2021
-// - Restructured entire code to include chess_game class
-//   still capable of the same functionality, but now
-//   able to start on chess engine
-// 02/05/2021
-// - Added functionality to promote pawns
-// 03/05/2021
-// - Added checks for valid user inputs
-// 06/05/2021
-// - Removed using namespace to adhere to house style
-// - Removed uneccessary #includes
-// 10/05/2021
-// - Added functionality to save game in .pgn format
-// 15/05/2021
-// - Fixed bug where black player can go first
-// - Added functionality to load a saved chess game
-// 19/05/2021
-// - Added the functionality to quit the game and draw
 
 
 #include <string>
@@ -84,7 +61,8 @@ int main() {
         while (game.has_ended() == false && quit_game == false) {
             bool in_check;
             if (game.get_game_status() == cgm::check) {
-                std::cout << "QUICK! " << game.get_current_player()->get_name() << ", you must move your must protect your king!" << std::endl;
+                std::cout << "QUICK! " << game.get_current_player()->get_name() 
+                          << ", you must move your must protect your king!" << std::endl;
                 in_check = true;
             } else {
                 in_check = false;
@@ -130,9 +108,7 @@ int get_valid_input(int valid_input_one, int valid_input_two) {
     bool is_input_valid{false};
     while (!is_input_valid) {
         // Make sure input is one of two valid inputs and int
-        if (std::cin.fail() || input == "" || 
-            input.find_first_not_of("0123456789") != std::string::npos || 
-            input.size() >= 10) {
+        if (std::cin.fail() || input == "" || input.find_first_not_of("0123456789") != std::string::npos || input.size() >= 10) {
             std::cin.clear();
             std::cout << "Sorry, your input was not valid, please enter "
                          "a valid input (" << valid_input_one << "/" <<
@@ -143,9 +119,8 @@ int get_valid_input(int valid_input_one, int valid_input_two) {
             number_input = std::stoi(input);
             if (number_input != valid_input_one && number_input != valid_input_two) {
                 std::cin.clear();
-                std::cout << "Sorry, your input was not valid, please enter "
-                             "a valid input (" << valid_input_one << "/" <<
-                             valid_input_two << "): ";
+                std::cout << "Sorry, your input was not valid, please enter a valid input (" << valid_input_one 
+                          << "/" << valid_input_two << "): ";
                 std::getline(std::cin, input);
             } else {
                 is_input_valid = true;
@@ -161,15 +136,11 @@ bool ask_for_yes_or_no(std::string question, std::string invalid_input_response)
         std::cout << question;
         std::string save_game_input;
         std::cin >> save_game_input;
-        if (save_game_input == "y" || save_game_input == "Y" ||
-            save_game_input == "yes" || save_game_input == "Yes") {
-            
+        if (save_game_input == "y" || save_game_input == "Y" || save_game_input == "yes" || save_game_input == "Yes") {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             return true;
-        } else if (save_game_input == "n" || save_game_input == "N" ||
-                   save_game_input == "no" || save_game_input == "No") {
-            
+        } else if (save_game_input == "n" || save_game_input == "N" || save_game_input == "no" || save_game_input == "No") {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             return false;

@@ -3,36 +3,6 @@
 // Source file for player class
 // 
 // Author: Jason Dominguez
-// Created: 23/04/2021
-// Last modified:
-// 30/04/2021
-// - Restructured entire code to include chess_game class
-//   still capable of the same functionality, but now
-//   able to start on chess engine
-// 01/05/2021
-// - Added chess_bot functionality to randomly select
-//   possible moves
-// 02/05/2021
-// - Added functionality to check for possibility of 
-//   using castling legally
-// 03/05/2021
-// - Added checks for valid user inputs
-// 06/05/2021
-// - Removed using namespace to adhere to house style
-// 10/05/2021
-// - Fixed bug where ChessBot could choose to move king
-//   with no possible moves, resulting in segmentation fault
-// - Fixed bug where piece could be moved, exposing the king
-//   to a checkmate position
-// 15/05/2021
-// - Added separate function to return all valid moves for a player
-// - Added function to get possible moves for player chosen piece,
-//   to help with checking for valid move when loading in files
-// 19/05/2021
-// - Changed all chess piece related shared pointers to 
-//   unique, using move semantics for passing to functions
-// - Added functionality to quit the game and draw
-// - Fixed bug with getting possible moves when in check
 
 
 #include <algorithm>
@@ -82,7 +52,6 @@ void plr::player::ask_for_color() {
         std::cout << name << " please enter your chess piece color (white/black): ";
         std::getline(std::cin, chess_piece_color);
     }
-
     piece_color = pcs::string_to_color(chess_piece_color);
 }
 
@@ -94,8 +63,7 @@ std::pair<int, int> plr::human_player::choose_move(const brd::board& chess_board
     int start_position_index{};
     std::vector<int> possible_moves{};
     std::vector<std::string> possible_moves_board_positions{};
-    // Make sure player chooses one of their color pieces which has 
-    // possible moves and not a blank chess board tile
+    // Make sure player chooses one of their color pieces which has possible moves and not a blank chess board tile
     while (true) {
         possible_moves.clear();
         possible_moves_board_positions.clear();
@@ -123,7 +91,8 @@ std::pair<int, int> plr::human_player::choose_move(const brd::board& chess_board
                     }
                 } while (!chess_board[start_position_index]);
                 if (chess_board[start_position_index]->get_piece_color() != this->get_piece_color()) {
-                    std::cout << "You can only move a " << color_to_string(this->get_piece_color()) << " chess piece. You're not trying to cheat are you...?" << std::endl;
+                    std::cout << "You can only move a " << color_to_string(this->get_piece_color()) 
+                              << " chess piece. You're not trying to cheat are you...?" << std::endl;
                 }
             } while (chess_board[start_position_index]->get_piece_color() != this->get_piece_color());
 
@@ -132,20 +101,15 @@ std::pair<int, int> plr::human_player::choose_move(const brd::board& chess_board
             
             // For a king, must make sure that it is not being moved into check position
             if (chess_board[start_position_index]->get_symbol() == 'K') {
-                // Also need to make sure castling won't be used to move
-                // though positions which the opposition can attack so temporarily add these positions
-                // to vector to see if opposition could attack them
+                // Also need to make sure castling won't be used to move though positions which the 
+                // opposition can attack so temporarily add these positions to vector to see if opposition could attack them
                 bool castle_check_position_one{false};
-                if (std::find(possible_moves.begin(), possible_moves.end(),
-                              start_position_index + 2) != possible_moves.end()) {
-                    
+                if (std::find(possible_moves.begin(), possible_moves.end(), start_position_index + 2) != possible_moves.end()) {
                     possible_moves.push_back(start_position_index + 1);
                     castle_check_position_one = true;
                 }
                 bool castle_check_position_two{false};
-                if (std::find(possible_moves.begin(), possible_moves.end(),
-                              start_position_index - 2) != possible_moves.end()) {
-                    
+                if (std::find(possible_moves.begin(), possible_moves.end(), start_position_index - 2) != possible_moves.end()) {
                     possible_moves.push_back(start_position_index - 1);
                     castle_check_position_two = true;
                 }
@@ -154,16 +118,33 @@ std::pair<int, int> plr::human_player::choose_move(const brd::board& chess_board
                 std::vector<int>::iterator last_new_position{possible_moves.end()};
                 std::vector<int>::iterator possible_final_position;
                 std::vector<int> moves_to_remove;
-                for (possible_final_position = first_new_position ; possible_final_position < last_new_position ; ++possible_final_position) {
+                for (possible_final_position = first_new_position ; 
+                     possible_final_position < last_new_position ; 
+                     ++possible_final_position)
+                {
                     // Make each of the possible king moves on a copy of the current chess board
-                    std::vector<std::unique_ptr<pcs::chess_piece>> chess_board_after_possible_next_move{std::move(chess_board.get_board())};
+                    std::vector<std::unique_ptr<pcs::chess_piece>> board_after_possible_move{
+                                                                       std::move(chess_board.get_board())};
+                    
+                    if (board_after_possible_move[start_position_index]->get_symbol() == 'p' &&  
+                        !board_after_possible_move[*possible_final_position] &&
+                        (*possible_final_position == start_position_index + 8 + 1 || *possible_final_position == start_position_index + 8 - 1) ) {
 
-                    // Will need to edit line below to account for special moves en passant and castling
-                    chess_board_after_possible_next_move[*possible_final_position] = std::move(chess_board_after_possible_next_move[start_position_index]);
-                    chess_board_after_possible_next_move[*possible_final_position]->has_been_moved();
+                        // En passant move upwards
+                        chess_board[*possible_final_position] = std::move(chess_board[*possible_final_position - 8]);
+                    } else if (board_after_possible_move[start_position_index]->get_symbol() == 'p' &&  
+                               !board_after_possible_move[*possible_final_position] &&
+                               (*possible_final_position == start_position_index - 8 + 1 || *possible_final_position == start_position_index - 8 - 1) ) {
+                
+                        // En passant move down
+                        chess_board[*possible_final_position] = std::move(chess_board[*possible_final_position + 8]);
+                    }
+                    board_after_possible_move[*possible_final_position] = std::move(board_after_possible_move[start_position_index]);
+                    board_after_possible_move[*possible_final_position]->has_been_moved();
 
-                    std::vector<int> opposition_possible_moves = std::get<2>(pcs::get_all_possible_moves(pcs::opposite_color(this->get_piece_color()), 
-                                                                                                         std::move(chess_board_after_possible_next_move)));
+                    std::vector<int> opposition_possible_moves = std::get<2>(pcs::get_all_possible_moves(
+                                                                                      pcs::opposite_color(this->get_piece_color()), 
+                                                                                      std::move(board_after_possible_move) ));
 
                     // If this possible final move for the king was found in possible opposition moves then
                     // it can be captured, therefore we will remove this from possible moves for this king
@@ -174,102 +155,93 @@ std::pair<int, int> plr::human_player::choose_move(const brd::board& chess_board
                         moves_to_remove.push_back(*possible_final_position);
                     }
                 }  
-                // Remove the moves added to check if castling was possible
-                // from possible final positions and remove castling move from
-                // possible final positions if they are in moves to remove (i.e.
-                // they would put the king in check)
+                // Remove the moves added to check if castling was possible from possible final positions and remove castling move from
+                // possible final positions if they are in moves to remove (i.e. they would put the king in check)
                 if (castle_check_position_two) {
-                    std::vector<int>::iterator position = std::find(possible_moves.begin(), 
-                                                                    possible_moves.end(), 
-                                                                    start_position_index - 1);
+                    std::vector<int>::iterator position = std::find(possible_moves.begin(), possible_moves.end(), start_position_index - 1);
                     if (position != possible_moves.end()) {
                         possible_moves.erase(position);
                     }
-                    if (std::find(moves_to_remove.begin(), 
-                                  moves_to_remove.end(),
-                                  start_position_index - 1) != moves_to_remove.end()) {
-
-                        possible_moves.erase(std::remove(possible_moves.begin(), 
-                                                         possible_moves.end(), 
+                    if (std::find(moves_to_remove.begin(), moves_to_remove.end(), start_position_index - 1) != moves_to_remove.end()) {
+                        possible_moves.erase(std::remove(possible_moves.begin(), possible_moves.end(), 
                                                          start_position_index - 2), possible_moves.end());    
                     }
                 }
                 if (castle_check_position_one) {
-                    std::vector<int>::iterator position = std::find(possible_moves.begin(), 
-                                                                    possible_moves.end(), 
-                                                                    start_position_index + 1);
+                    std::vector<int>::iterator position = std::find(possible_moves.begin(), possible_moves.end(), start_position_index + 1);
                     if (position != possible_moves.end()) {
                         possible_moves.erase(position);
                     }
-                    if (std::find(moves_to_remove.begin(), 
-                                  moves_to_remove.end(),
-                                  start_position_index + 1) != moves_to_remove.end()) {
-
-                        possible_moves.erase(std::remove(possible_moves.begin(), 
-                                                         possible_moves.end(), 
+                    if (std::find(moves_to_remove.begin(), moves_to_remove.end(), start_position_index + 1) != moves_to_remove.end()) {
+                        possible_moves.erase(std::remove(possible_moves.begin(), possible_moves.end(), 
                                                          start_position_index + 2), possible_moves.end());    
                     }
                 }
 
                 // Remove this possible position for the king, if found in opposition possible moves
-                possible_moves.erase(std::remove_if(possible_moves.begin(), 
-                                                    possible_moves.end(),
+                possible_moves.erase(std::remove_if(possible_moves.begin(), possible_moves.end(),
                                                     [&moves_to_remove](const int& position) -> bool {
-                                                        return std::find(moves_to_remove.begin(),
-                                                                         moves_to_remove.end(),
+                                                        return std::find(moves_to_remove.begin(), moves_to_remove.end(),
                                                                          position) != moves_to_remove.end();
                                                     }), possible_moves.end());
-
             } else {
                 // For pieces other than king, make sure they don't leave the king in a checkmate position
                 // Get current player king position
                 int king_position_index{};
                 for (int i{} ; i < 8*8 ; i++) {
-                    if (chess_board[i] && 
-                        chess_board[i]->get_piece_color() == this->get_piece_color() &&
-                        chess_board[i]->get_symbol() == 'K') {
-                        
+                    if (chess_board[i] && chess_board[i]->get_piece_color() == this->get_piece_color() &&
+                        chess_board[i]->get_symbol() == 'K') 
+                    {
                         king_position_index = i;
                     }
                 }
-
                 // See what board layout will be for all possible moves and make sure king is not able to be attacked
                 std::vector<int>::iterator first_new_position{possible_moves.begin()};
                 std::vector<int>::iterator last_new_position{possible_moves.end()};
                 std::vector<int>::iterator possible_final_position;
                 std::vector<int> moves_to_remove;
-                for (possible_final_position = first_new_position ; possible_final_position < last_new_position ; ++possible_final_position) {
+                for (possible_final_position = first_new_position ; possible_final_position < last_new_position ; 
+                     ++possible_final_position)
+                {
                     // Make each of the possible king moves on a copy of the current chess board
-                    std::vector<std::unique_ptr<pcs::chess_piece>> chess_board_after_possible_next_move{std::move(chess_board.get_board())};
+                    std::vector<std::unique_ptr<pcs::chess_piece>> board_after_possible_move{std::move(chess_board.get_board())};
 
-                    // Will need to edit line below to account for special moves en passant and castling
-                    chess_board_after_possible_next_move[*possible_final_position] = std::move(chess_board_after_possible_next_move[start_position_index]);
-                    chess_board_after_possible_next_move[*possible_final_position]->has_been_moved();
+                    if (board_after_possible_move[start_position_index]->get_symbol() == 'p' &&  
+                        !board_after_possible_move[*possible_final_position] &&
+                        (*possible_final_position == start_position_index + 8 + 1 || *possible_final_position == start_position_index + 8 - 1) ) {
 
-                    std::vector<int> opposition_possible_moves = std::get<2>(pcs::get_all_possible_moves(pcs::opposite_color(this->get_piece_color()), 
-                                                                                                         std::move(chess_board_after_possible_next_move)));
+                        // En passant move upwards
+                        chess_board[*possible_final_position] = std::move(chess_board[*possible_final_position - 8]);
+                    } else if (board_after_possible_move[start_position_index]->get_symbol() == 'p' &&  
+                               !board_after_possible_move[*possible_final_position] &&
+                               (*possible_final_position == start_position_index - 8 + 1 || *possible_final_position == start_position_index - 8 - 1) ) {
+                
+                        // En passant move down
+                        chess_board[*possible_final_position] = std::move(chess_board[*possible_final_position + 8]);
+                    }
+                    board_after_possible_move[*possible_final_position] = std::move(board_after_possible_move[start_position_index]);
+                    board_after_possible_move[*possible_final_position]->has_been_moved();
+
+                    std::vector<int> opposition_possible_moves = std::get<2>(pcs::get_all_possible_moves(
+                                                                                      pcs::opposite_color(this->get_piece_color()), 
+                                                                                      std::move(board_after_possible_move) ));
 
                     // If this the king was found in possible opposition moves then
                     // it can be captured, therefore we will remove this from possible moves for this king
-                    if (std::find(opposition_possible_moves.begin(), 
-                                  opposition_possible_moves.end(),
-                                  king_position_index) != opposition_possible_moves.end()) {
-            
+                    if (std::find(opposition_possible_moves.begin(), opposition_possible_moves.end(),
+                                  king_position_index) != opposition_possible_moves.end())
+                    {
                         moves_to_remove.push_back(*possible_final_position);
                     }
                 }  
-
                 // Remove this possible position
-                possible_moves.erase(std::remove_if(possible_moves.begin(), 
-                                                    possible_moves.end(),
+                possible_moves.erase(std::remove_if(possible_moves.begin(), possible_moves.end(),
                                                     [&moves_to_remove](const int& position) -> bool {
                                                         return std::find(moves_to_remove.begin(),
                                                                          moves_to_remove.end(),
                                                                          position) != moves_to_remove.end();
                                                     }), possible_moves.end());
-
             }
-
             if (possible_moves.size() == 0) {
                 std::cout << "Sorry, this piece has no possible moves. Please try again..." << std::endl;
             }
@@ -301,9 +273,9 @@ std::pair<int, int> plr::human_player::choose_move(const brd::board& chess_board
     std::cout << "To which of these positions do you want to move your piece?" << std::endl;
     std::string end_position{};
     std::getline(std::cin, end_position);
-    while (std::cin.fail() || std::find(possible_moves_board_positions.begin(), 
-                                        possible_moves_board_positions.end(),
+    while (std::cin.fail() || std::find(possible_moves_board_positions.begin(), possible_moves_board_positions.end(),
                                         end_position) == possible_moves_board_positions.end()) {
+        
         std::cin.clear();
         std::cout << "That's not a legal move... Do you even know how to play chess?!" << std::endl;
         std::cout << "Please enter one of the possible positions to which this piece can move: ";
@@ -347,8 +319,7 @@ std::pair<int, int> plr::chess_bot::choose_move(const brd::board& chess_board) {
 
 std::vector<std::pair<int, std::vector<int>>> plr::player::get_player_possible_moves(const brd::board& original_chess_board) {
     // Get all possible moves for all player's pieces
-    std::vector<std::pair<int, std::vector<int>>> all_possible_moves{};
-        
+    std::vector<std::pair<int, std::vector<int>>> all_possible_moves{};   
     for (int i{} ; i < 8*8 ; i++) {
         // Deep copy original chess board to make temporary moves testing validity
         brd::board chess_board{original_chess_board};
@@ -360,27 +331,26 @@ std::vector<std::pair<int, std::vector<int>>> plr::player::get_player_possible_m
                 continue;
             }
 
-            std::pair<int, std::vector<int>> possible_moves = this->get_piece_valid_moves(i, 
-                                                                                          possible_final_positions, 
+            std::pair<int, std::vector<int>> possible_moves = this->get_piece_valid_moves(i, possible_final_positions, 
                                                                                           std::move(chess_board));
-
+            
             // Account for pieces with no possible moves (i.e. king had moves removed and now has none)
             if (possible_moves.second.size() > 0) {
                 all_possible_moves.push_back(possible_moves);
             }
         }
     }
-
     return all_possible_moves;
 }
 
 
-std::vector<std::pair<int, std::vector<int>>> plr::player::get_player_piece_possible_moves(char chess_piece, const brd::board& original_chess_board) {
-    // Deep copy original chess board to make temporary moves testing validity
-    brd::board chess_board{original_chess_board};
-    
+std::vector<std::pair<int, std::vector<int>>> plr::player::get_player_piece_possible_moves(char chess_piece, 
+                                                                                           const brd::board& original_chess_board) {
     // Get all possible moves for all player's specified piece
     std::vector<std::pair<int, std::vector<int>>> all_possible_moves{};
+    
+    // Deep copy original chess board to make temporary moves testing validity
+    brd::board chess_board{original_chess_board};
     
     for (int i{} ; i < 8*8 ; i++) {
         if (chess_board[i] && chess_board[i]->get_piece_color() == this->piece_color && chess_board[i]->get_symbol() == chess_piece) {
@@ -391,8 +361,7 @@ std::vector<std::pair<int, std::vector<int>>> plr::player::get_player_piece_poss
                 continue;
             }
 
-            std::pair<int, std::vector<int>> possible_moves = this->get_piece_valid_moves(i, 
-                                                                                          possible_final_positions, 
+            std::pair<int, std::vector<int>> possible_moves = this->get_piece_valid_moves(i, possible_final_positions, 
                                                                                           std::move(chess_board));
 
             // Account for pieces with no possible moves (i.e. king had moves removed and now has none)
@@ -401,13 +370,11 @@ std::vector<std::pair<int, std::vector<int>>> plr::player::get_player_piece_poss
             }
         }
     }
-
     return all_possible_moves;
 }
 
 
-std::pair<int, std::vector<int>> plr::player::get_piece_valid_moves(int start_position_index, 
-                                                                    std::vector<int> possible_final_positions,
+std::pair<int, std::vector<int>> plr::player::get_piece_valid_moves(int start_position_index, std::vector<int> possible_final_positions,
                                                                     const brd::board& chess_board) {
     // For a king, must make sure that it is not being moved into check position
     if (chess_board[start_position_index]->get_symbol() == 'K') {
@@ -435,80 +402,62 @@ std::pair<int, std::vector<int>> plr::player::get_piece_valid_moves(int start_po
         std::vector<int> moves_to_remove;
         for (possible_final_position = first_new_position ; possible_final_position < last_new_position ; ++possible_final_position) {
             // Make each of the possible king moves on a copy of the current chess board
-            std::vector<std::unique_ptr<pcs::chess_piece>> chess_board_after_possible_next_move{std::move(chess_board.get_board())};
+            std::vector<std::unique_ptr<pcs::chess_piece>> board_after_possible_move{std::move(chess_board.get_board())};
 
             // Will need to edit line below to account for special moves en passant and castling
-            chess_board_after_possible_next_move[*possible_final_position] = std::move(chess_board_after_possible_next_move[start_position_index]);
-            chess_board_after_possible_next_move[*possible_final_position]->has_been_moved();
+            board_after_possible_move[*possible_final_position] = std::move(board_after_possible_move[start_position_index]);
+            board_after_possible_move[*possible_final_position]->has_been_moved();
 
-            std::vector<int> opposition_possible_moves = std::get<2>(pcs::get_all_possible_moves(pcs::opposite_color(this->get_piece_color()), 
-                                                                                                 std::move(chess_board_after_possible_next_move)));
+            std::vector<int> opposition_possible_moves = std::get<2>(pcs::get_all_possible_moves(
+                                                                              pcs::opposite_color(this->get_piece_color()), 
+                                                                              std::move(board_after_possible_move)));
 
             // If this possible final move for the king was found in possible opposition moves then
             // it can be captured, therefore we will remove this from possible moves for this king
-            if (std::find(opposition_possible_moves.begin(), 
-                          opposition_possible_moves.end(),
+            if (std::find(opposition_possible_moves.begin(), opposition_possible_moves.end(),
                           *possible_final_position) != opposition_possible_moves.end()) {
-            
+                
                 moves_to_remove.push_back(*possible_final_position);
             }
         }  
 
-        // Remove the moves added to check if castling was possible
-        // from possible final positions and remove castling move from
-        // possible final positions if they are in moves to remove (i.e.
-        // they would put the king in check)
+        // Remove the moves added to check if castling was possible from possible final positions and remove castling move from
+        // possible final positions if they are in moves to remove (i.e. they would put the king in check)
         if (castle_check_position_two) {
-            std::vector<int>::iterator position = std::find(possible_final_positions.begin(), 
-                                                            possible_final_positions.end(), 
+            std::vector<int>::iterator position = std::find(possible_final_positions.begin(), possible_final_positions.end(), 
                                                             start_position_index - 1);
             if (position != possible_final_positions.end()) {
                 possible_final_positions.erase(position);
             }
-            if (std::find(moves_to_remove.begin(), 
-                          moves_to_remove.end(),
-                          start_position_index - 1) != moves_to_remove.end()) {
-
-                possible_final_positions.erase(std::remove(possible_final_positions.begin(), 
-                                                           possible_final_positions.end(), 
+            if (std::find(moves_to_remove.begin(), moves_to_remove.end(), start_position_index - 1) != moves_to_remove.end()) {
+                possible_final_positions.erase(std::remove(possible_final_positions.begin(), possible_final_positions.end(), 
                                                            start_position_index - 2), possible_final_positions.end());    
             }
         }
         if (castle_check_position_one) {
-            std::vector<int>::iterator position = std::find(possible_final_positions.begin(), 
-                                                            possible_final_positions.end(), 
+            std::vector<int>::iterator position = std::find(possible_final_positions.begin(), possible_final_positions.end(), 
                                                             start_position_index + 1);
             if (position != possible_final_positions.end()) {
                 possible_final_positions.erase(position);
             }
-            if (std::find(moves_to_remove.begin(), 
-                          moves_to_remove.end(),
-                          start_position_index + 1) != moves_to_remove.end()) {
-
-                possible_final_positions.erase(std::remove(possible_final_positions.begin(), 
-                                                           possible_final_positions.end(), 
+            if (std::find(moves_to_remove.begin(), moves_to_remove.end(), start_position_index + 1) != moves_to_remove.end()) {
+                possible_final_positions.erase(std::remove(possible_final_positions.begin(), possible_final_positions.end(), 
                                                            start_position_index + 2), possible_final_positions.end());    
             }
         }
-
         // Remove possible positions for the king, if found in opposition possible moves
-        possible_final_positions.erase(std::remove_if(possible_final_positions.begin(), 
-                                                      possible_final_positions.end(),
+        possible_final_positions.erase(std::remove_if(possible_final_positions.begin(), possible_final_positions.end(),
                                                       [&moves_to_remove](const int& position) -> bool {
                                                            return std::find(moves_to_remove.begin(),
                                                                             moves_to_remove.end(),
                                                                             position) != moves_to_remove.end();
                                                        }), possible_final_positions.end());
-            
     } else {
         // For pieces other than king, make sure they don't leave the king in a checkmate position
         // Get current player king position
         int king_position_index{};
         for (int i{} ; i < 8*8 ; i++) {
-            if (chess_board[i] && 
-                chess_board[i]->get_piece_color() == this->get_piece_color() &&
-                chess_board[i]->get_symbol() == 'K') {
-                        
+            if (chess_board[i] && chess_board[i]->get_piece_color() == this->get_piece_color() && chess_board[i]->get_symbol() == 'K') {
                 king_position_index = i;
             }
         }
@@ -520,36 +469,31 @@ std::pair<int, std::vector<int>> plr::player::get_piece_valid_moves(int start_po
         std::vector<int> moves_to_remove;
         for (possible_final_position = first_new_position ; possible_final_position < last_new_position ; ++possible_final_position) {
             // Make each of the possible moves on a copy of the current chess board
-            std::vector<std::unique_ptr<pcs::chess_piece>> chess_board_after_possible_next_move{std::move(chess_board.get_board())};
+            std::vector<std::unique_ptr<pcs::chess_piece>> board_after_possible_move{std::move(chess_board.get_board())};
 
             // Will need to edit line below to account for special moves en passant and castling
-            chess_board_after_possible_next_move[*possible_final_position] = std::move(chess_board_after_possible_next_move[start_position_index]);
-            chess_board_after_possible_next_move[*possible_final_position]->has_been_moved();
+            board_after_possible_move[*possible_final_position] = std::move(board_after_possible_move[start_position_index]);
+            board_after_possible_move[*possible_final_position]->has_been_moved();
 
-            std::vector<int> opposition_possible_moves = std::get<2>(pcs::get_all_possible_moves(pcs::opposite_color(this->get_piece_color()), 
-                                                                                                 std::move(chess_board_after_possible_next_move)));
-
+            std::vector<int> opposition_possible_moves = std::get<2>(pcs::get_all_possible_moves(
+                                                                              pcs::opposite_color(this->get_piece_color()), 
+                                                                              std::move(board_after_possible_move)));
             // If the king was found in possible opposition moves then
             // it can be captured, therefore we will remove this from possible moves for this king
-            if (std::find(opposition_possible_moves.begin(), 
-                          opposition_possible_moves.end(),
-                          king_position_index) != opposition_possible_moves.end()) {
-            
+            if (std::find(opposition_possible_moves.begin(), opposition_possible_moves.end(),
+                          king_position_index) != opposition_possible_moves.end()) 
+            {
                 moves_to_remove.push_back(*possible_final_position);
             }
         }  
-
         // Remove this possible position
-        possible_final_positions.erase(std::remove_if(possible_final_positions.begin(), 
-                                                      possible_final_positions.end(),
+        possible_final_positions.erase(std::remove_if(possible_final_positions.begin(), possible_final_positions.end(),
                                                       [&moves_to_remove](const int& position) -> bool {
                                                               return std::find(moves_to_remove.begin(),
                                                                                moves_to_remove.end(),
                                                                                position) != moves_to_remove.end();
                                                        }), possible_final_positions.end());
-
-    }
-            
+    }  
     std::pair<int, std::vector<int>> possible_moves = std::pair<int, std::vector<int>>(start_position_index, possible_final_positions);
     
     return possible_moves;

@@ -4,31 +4,6 @@
 // and derived classes 
 // 
 // Author: Jason Dominguez
-// Created: 23/04/2021
-// Last modified: 
-// 24/04/2021
-// - Added function to get all possible moves for 
-//   a given chess piece color
-// 25/04/2021
-// - Edited get valid moves functions to take a pointer to a chess piece pointer
-//   rather than chess board, to reduce interclass dependence
-// - Changed raw pointers to smart shared_ptr pointer
-// 26/04/2021
-// - Removed repeated has_moved attribute from derived chess_piece classes
-//   which resulted in pawns being able to move two forward all the time
-// 30/04/2021
-// - Restructured entire code to include chess_game class
-//   still capable of the same functionality, but now
-//   able to start on chess engine
-// 02/05/2021
-// - Added private member variable to pawn class to say whether it can be
-//   captured via en passant
-// 18/05/2021
-// - Created clone function for pieces to help with deep copying of 
-//   chess board
-// 19/05/2021
-// - Changed all chess piece related shared pointers to 
-//   unique, using move semantics for passing to functions
 
 
 #ifndef CHESS_PIECES_H
@@ -37,8 +12,8 @@
 
 #include <iostream>
 #include <vector>
-#include <memory>
 #include <tuple>
+#include <memory>
 
 
 // Class and function definitions
@@ -47,6 +22,7 @@ namespace pcs {
     std::string color_to_string(color chess_piece_color);
     color string_to_color(std::string chess_piece_color);
     color opposite_color(color chess_piece_color);
+
 
     class chess_piece
     {
@@ -69,10 +45,13 @@ namespace pcs {
             has_moved = false;
             en_passant_is_possible = false;
         }
-        chess_piece(color white_or_black, int id, char symbol): 
-            piece_color{white_or_black}, piece_id{id}, piece_symbol{symbol}, has_moved{false} {}
-        chess_piece(color white_or_black, int id, char symbol, bool moved, bool en_passant): 
-            piece_color{white_or_black}, piece_id{id}, piece_symbol{symbol}, has_moved{moved}, en_passant_is_possible{en_passant} {}
+        chess_piece(color white_or_black, int id, char symbol): piece_color{white_or_black}, piece_id{id}, 
+                                                                piece_symbol{symbol}, has_moved{false} {}
+        chess_piece(color white_or_black, int id, char symbol, bool moved): piece_color{white_or_black}, piece_id{id}, 
+                                                                            piece_symbol{symbol}, has_moved{moved} {}
+        chess_piece(color white_or_black, int id, char symbol, bool moved, bool en_passant): piece_color{white_or_black}, piece_id{id}, 
+                                                                                             piece_symbol{symbol}, has_moved{moved},
+                                                                                             en_passant_is_possible{en_passant} {}
         // Destructor
         virtual ~chess_piece(){}
 
@@ -84,8 +63,10 @@ namespace pcs {
         void has_been_moved() { has_moved = true; }
         bool is_en_passant_possible() { return en_passant_is_possible; }
         void set_en_passant_possibility(bool en_passant_possibility) { en_passant_is_possible = en_passant_possibility; }
+        
         virtual std::unique_ptr<chess_piece> clone() const = 0;
-
+        virtual std::vector<int> get_valid_moves(int start_position, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board)=0;
+        
         chess_piece & operator=(chess_piece &chess_piece_to_copy) {
             if (&chess_piece_to_copy == this) return *this; // account for self-assignment
         
@@ -94,10 +75,13 @@ namespace pcs {
 
             return *this;
         }
-        virtual std::vector<int> get_valid_moves(int start_position, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board)=0;
     };
 
-    std::tuple<std::vector<int>, std::vector<std::vector<int>>, std::vector<int>> get_all_possible_moves(color piece_color, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board);
+
+    std::tuple<std::vector<int>,
+               std::vector<std::vector<int>>,
+               std::vector<int>> get_all_possible_moves(color piece_color, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board);
+
 
     class pawn : public chess_piece
     {
@@ -105,8 +89,8 @@ namespace pcs {
         // Constructors
         pawn() : chess_piece() {}
         pawn(color white_or_black, int id) : chess_piece(white_or_black, id, 'p') {}
-        pawn(color white_or_black, int id, bool moved, bool en_passant) : 
-            chess_piece(white_or_black, id, 'p', moved, en_passant) {}
+        pawn(color white_or_black, int id, bool moved) : chess_piece(white_or_black, id, 'p', moved) {}
+        pawn(color white_or_black, int id, bool moved, bool en_passant) : chess_piece(white_or_black, id, 'p', moved, en_passant) {}
         // Destructor
         virtual ~pawn(){}
 
@@ -114,12 +98,11 @@ namespace pcs {
         std::vector<int> get_valid_moves(int start_position, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board);
 
         std::unique_ptr<chess_piece> clone() const {
-            return std::move(std::make_unique<pawn>(pcs::pawn(this->piece_color, 
-                                                              this->piece_id,
-                                                              this->has_moved,
-                                                              this->en_passant_is_possible)));
+            return std::move(std::make_unique<pawn>(pcs::pawn(this->piece_color, this->piece_id, 
+                                                              this->has_moved, this->en_passant_is_possible)));
         }
     };
+
 
     class rook : public chess_piece
     {  
@@ -127,8 +110,7 @@ namespace pcs {
         // Constructors
         rook() : chess_piece() {}
         rook(color white_or_black, int id) : chess_piece(white_or_black, id, 'R') {}
-        rook(color white_or_black, int id, bool moved, bool en_passant) : 
-            chess_piece(white_or_black, id, 'R', moved, en_passant) {}
+        rook(color white_or_black, int id, bool moved) : chess_piece(white_or_black, id, 'R', moved) {}
         // Destructor
         virtual ~rook(){}
 
@@ -136,12 +118,10 @@ namespace pcs {
         std::vector<int> get_valid_moves(int start_position, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board);
 
         std::unique_ptr<chess_piece> clone() const {
-            return std::move(std::make_unique<rook>(pcs::rook(this->piece_color, 
-                                                              this->piece_id,
-                                                              this->has_moved,
-                                                              this->en_passant_is_possible)));
+            return std::move(std::make_unique<rook>(pcs::rook(this->piece_color, this->piece_id, this->has_moved)));
         }
     };
+
 
     class knight : public chess_piece
     {
@@ -149,20 +129,17 @@ namespace pcs {
         // Constructors
         knight() : chess_piece() {}
         knight(color white_or_black, int id) : chess_piece(white_or_black, id, 'N') {}
-        knight(color white_or_black, int id, bool moved, bool en_passant) : 
-            chess_piece(white_or_black, id, 'N', moved, en_passant) {}
+        knight(color white_or_black, int id, bool moved) : chess_piece(white_or_black, id, 'N', moved) {}
         // Destructor
         virtual ~knight(){}
 
         std::vector<int> get_valid_moves(int start_position, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board);
 
         std::unique_ptr<chess_piece> clone() const {
-            return std::move(std::make_unique<knight>(pcs::knight(this->piece_color, 
-                                                                  this->piece_id,
-                                                                  this->has_moved,
-                                                                  this->en_passant_is_possible)));
+            return std::move(std::make_unique<knight>(pcs::knight(this->piece_color, this->piece_id, this->has_moved)));
         }
     };
+
 
     class bishop : public chess_piece
     {
@@ -170,20 +147,17 @@ namespace pcs {
         // Constructors
         bishop() : chess_piece() {}
         bishop(color white_or_black, int id) : chess_piece(white_or_black, id, 'B') {}
-        bishop(color white_or_black, int id, bool moved, bool en_passant) : 
-            chess_piece(white_or_black, id, 'B', moved, en_passant) {}
+        bishop(color white_or_black, int id, bool moved) : chess_piece(white_or_black, id, 'B', moved) {}
         // Destructor
         virtual ~bishop(){}
 
         std::vector<int> get_valid_moves(int start_position, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board);
 
         std::unique_ptr<chess_piece> clone() const {
-            return std::move(std::make_unique<bishop>(pcs::bishop(this->piece_color, 
-                                                                  this->piece_id,
-                                                                  this->has_moved,
-                                                                  this->en_passant_is_possible)));
+            return std::move(std::make_unique<bishop>(pcs::bishop(this->piece_color, this->piece_id, this->has_moved)));
         }
     };
+
 
     class queen : public chess_piece
     {
@@ -191,20 +165,17 @@ namespace pcs {
         // Constructors
         queen() : chess_piece() {}
         queen(color white_or_black, int id) : chess_piece(white_or_black, id, 'Q') {}
-        queen(color white_or_black, int id, bool moved, bool en_passant) : 
-            chess_piece(white_or_black, id, 'Q', moved, en_passant) {}
+        queen(color white_or_black, int id, bool moved) : chess_piece(white_or_black, id, 'Q', moved) {}
         // Destructor
         virtual ~queen(){}
 
         std::vector<int> get_valid_moves(int start_position, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board);
 
         std::unique_ptr<chess_piece> clone() const {
-            return std::move(std::make_unique<queen>(pcs::queen(this->piece_color, 
-                                                                this->piece_id,
-                                                                this->has_moved,
-                                                                this->en_passant_is_possible)));
+            return std::move(std::make_unique<queen>(pcs::queen(this->piece_color, this->piece_id, this->has_moved)));
         }
     };
+
 
     class king : public chess_piece
     {
@@ -212,18 +183,14 @@ namespace pcs {
         // Constructors
         king() : chess_piece() {}
         king(color white_or_black, int id) : chess_piece(white_or_black, id, 'K') {}
-        king(color white_or_black, int id, bool moved, bool en_passant) : 
-            chess_piece(white_or_black, id, 'K', moved, en_passant) {}
+        king(color white_or_black, int id, bool moved) : chess_piece(white_or_black, id, 'K', moved) {}
         // Destructor
         virtual ~king(){}
 
         std::vector<int> get_valid_moves(int start_position, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board);
 
         std::unique_ptr<chess_piece> clone() const {
-            return std::move(std::make_unique<king>(pcs::king(this->piece_color, 
-                                                              this->piece_id,
-                                                              this->has_moved,
-                                                              this->en_passant_is_possible)));
+            return std::move(std::make_unique<king>(pcs::king(this->piece_color, this->piece_id, this->has_moved)));
         }
     };
 }

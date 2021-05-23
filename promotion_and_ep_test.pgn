@@ -1,0 +1,14 @@
+[Event "Pointless chess game"]
+[Site "Some computer somewhere"]
+[Date "2021.4.20" ]
+[Round "1"]
+[White "J"]
+[Black "S"]
+[Result "1-0"]
+1. a4 c5
+2. a5 Qc7
+3. h4 Qh2
+4. Rxh2 b5
+5. b6e.p. h5
+6. b7 Rh6
+7. xc8=Q# 1-0

@@ -15,6 +15,7 @@
 #include <iterator>
 #include <algorithm>
 #include <utility>
+#include <exception>
 #include <ctime>
 #include "player_class.hpp"
 #include "chess_pieces.hpp"
@@ -327,13 +328,17 @@ void cgm::chess_game::update_game_status() {
     if (check_on_opposition && !checkmate_on_opposition) {
         std::cout << "Check!" << std::endl;
         status = check;
-        // Update record of moves
-        moves_played.back() += "+" ;
+        // Update record of moves if not a loaded in move
+        if (moves_played.back().back() != '+') {
+            moves_played.back() += "+";
+        }
     } else if (checkmate_on_opposition) {
         std::cout << "Checkmate!" << std::endl;
         status = checkmate;
-        // Update record of moves
-        moves_played.back() += "#" ;
+        // Update record of moves if not a loaded in move
+        if (moves_played.back().back() != '#') {
+            moves_played.back() += "#";
+        }
     } else {
         status = active;
     }
@@ -477,8 +482,12 @@ namespace cgm {
         std::ifstream pgn_file{file_name};
         pgn_file.exceptions(std::ifstream::badbit);
 
+        if (pgn_file.fail()) {
+            throw std::ios_base::failure("File could not be opened");
+        }
+
         // Read the moves made from the pgn file
-        while (pgn_file.good()) {
+        while (pgn_file) {
             std::getline(pgn_file, file_entry);
             if (file_entry.find("[") == 0) {
                 // Don't require the header lines
@@ -582,7 +591,7 @@ namespace cgm {
                 start_position_index = brd::board_position_to_index(loaded_move.substr(0, 2));
                 end_position_index = brd::board_position_to_index(loaded_move.substr(2, 2));
             } else {
-                throw "Invalid portable game notation";
+                throw std::invalid_argument("Error: Invalid portable game notation");
             }
         } else {
             piece_to_move_symbol = loaded_move[0];
@@ -593,7 +602,7 @@ namespace cgm {
                 start_position_index = brd::board_position_to_index(loaded_move.substr(1, 2));
                 end_position_index = brd::board_position_to_index(loaded_move.substr(3, 2));
             } else {
-                throw "Invalid portable game notation";
+                throw std::invalid_argument("Error: Invalid portable game notation");
             }
         }
 
@@ -618,7 +627,7 @@ void cgm::chess_game::load_game() {
 
             std::cout << std::endl << "Loading game..." << std::endl << std::endl;
 
-            // Ensure board is in initial detup before loading moves
+            // Ensure board is in initial setup before loading moves
             chess_board.reset();
 
             // Play the game with the loaded move to get game to the saved state
@@ -669,9 +678,10 @@ void cgm::chess_game::load_game() {
                 } else {
                     // Check that move is possible from start to end position
                     if (!chess_board[start_position_index] || 
-                        chess_board[start_position_index]->get_piece_color() != this->current_player->get_piece_color()) 
-                    {   
-                        throw "Invalid chess move found";
+                        chess_board[start_position_index]->get_piece_color() != this->current_player->get_piece_color()) {   
+                        
+                        //throw "Invalid chess move found";
+                        throw std::invalid_argument("Error: Invalid chess move found");
                     } else {
                         std::vector<int> piece_valid_moves{};
                         piece_valid_moves = chess_board[start_position_index]->get_valid_moves(start_position_index, 
@@ -683,7 +693,8 @@ void cgm::chess_game::load_game() {
                     }
                 }
                 if (!move_valid) {
-                    throw "Invalid chess move found";
+                    //throw "Invalid chess move found";
+                    throw std::invalid_argument("Error: Invalid chess move found");
                 }
     
                 // Record move
@@ -752,12 +763,15 @@ void cgm::chess_game::load_game() {
             }
             // Chosen file successfully loaded in, get out of loop
             break;
+        /*
         } catch (const std::ifstream::failure& e) {
-            std::cerr << std::endl << "Error: file could not be opened." << std::endl;
+            std::cerr << std::endl << e.what() << std::endl;
+            //std::cerr << std::endl << "Error: file could not be opened." << std::endl;
             std::cout << "Please try again with a valid file name" << std::endl << std::endl;
-        } catch (const char* error) {
-            std::cerr << std::endl << "Error: " << error << std::endl;
-            std::cout << "Please try again with a valid .pgn file" << std::endl << std::endl;
+        */
+        } catch (const std::exception& e) {
+            std::cerr << std::endl << e.what() << std::endl;
+            std::cout << "Please try again with a valid file name" << std::endl << std::endl;
         }
     }
 }

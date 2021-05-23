@@ -1,0 +1,10 @@
+[Event "Pointless chess game"]
+[Site "Some computer somewhere"]
+[Date "2021.4.20" ]
+[Round "1"]
+[White "j"]
+[Black "ChessBot"]
+[Result "*"]
+1. c4 h5
+2. c5 b5
+3. b6e.p. g5

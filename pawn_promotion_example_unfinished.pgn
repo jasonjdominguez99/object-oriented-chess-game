@@ -1,0 +1,33 @@
+[Event "Pointless chess game"]
+[Site "Some computer somewhere"]
+[Date "2021.4.18" ]
+[Round "1"]
+[White "Jason"]
+[Black "ChessBot"]
+[Result "*"]
+1. a4 f5
+2. Na3 h5
+3. Nb5 e5
+4. Nd6+ Ke7
+5. Ra3 Kxd6
+6. Rd3+ Ke6
+7. f4 Nf6
+8. xe5 Ba3
+9. xf6 xf6
+10. h4 f4
+11. Rh1h3 Qe7
+12. Rh3g3 d5
+13. Rg8 a6
+14. c4 f5
+15. c5 Qf6
+16. c6 Bb4
+17. xb7 Qg5
+18. xc8=Q+ Ke7
+19. Qxc7+ Kf6
+20. Rxd5 Ke6
+21. xg5 h4
+22. g6 Ra7
+23. g7 Rh5
+24. Rf8 Nc6
+25. g8=R Ra8
+26. Rc5 Na5

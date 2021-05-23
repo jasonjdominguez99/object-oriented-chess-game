@@ -79,12 +79,16 @@ std::pair<int, int> plr::human_player::choose_move(const brd::board& chess_board
                         throw quit_game;
                     }
 
-                    while (brd::board_position_to_index(start_position) < 0) {
-                        std::cin.clear();
-                        std::cout << "Please enter a valid board position: ";
-                        std::getline(std::cin, start_position);
+                    while (true) {
+                        try {
+                            start_position_index = brd::board_position_to_index(start_position);
+                            break;
+                        } catch (const std::out_of_range& e) {
+                            std::cin.clear();
+                            std::cout << "Please enter a valid board position: ";
+                            std::getline(std::cin, start_position);
+                        }
                     }
-                    start_position_index = brd::board_position_to_index(start_position);
 
                     if (!chess_board[start_position_index]) {
                         std::cout << "Ummm... that's... not a chess piece...... Please try again..." << std::endl;
@@ -226,11 +230,11 @@ std::pair<int, int> plr::human_player::choose_move(const brd::board& chess_board
                                                                                       pcs::opposite_color(this->get_piece_color()), 
                                                                                       std::move(board_after_possible_move) ));
 
-                    // If this the king was found in possible opposition moves then
-                    // it can be captured, therefore we will remove this from possible moves for this king
+                    // If the king position was found in possible opposition moves then
+                    // it can be captured, therefore we will remove this from possible moves
                     if (std::find(opposition_possible_moves.begin(), opposition_possible_moves.end(),
-                                  king_position_index) != opposition_possible_moves.end())
-                    {
+                                  king_position_index) != opposition_possible_moves.end()) {
+                        
                         moves_to_remove.push_back(*possible_final_position);
                     }
                 }  
@@ -295,10 +299,10 @@ std::pair<int, int> plr::chess_bot::choose_move(const brd::board& chess_board) {
     // possible moves and not a blank chess board tile
     std::vector<std::pair<int, std::vector<int>>> all_possible_moves{};
     brd::board copy_of_board{chess_board};
-    //all_possible_moves = this->get_player_possible_moves(std::move(copy_of_board));
+    
     all_possible_moves = this->get_player_possible_moves(copy_of_board);
 
-    // Select random move from possible moves
+    // Select random piece to move, which has valid moves
     std::default_random_engine engine;
     engine.seed(std::chrono::system_clock::now().time_since_epoch().count());
     std::uniform_int_distribution<int> distr(0, all_possible_moves.size() - 1);
@@ -306,6 +310,7 @@ std::pair<int, int> plr::chess_bot::choose_move(const brd::board& chess_board) {
 
     int chosen_start_position = all_possible_moves[random_start_position_index].first;
 
+    // Select random move from piece's possible moves
     std::default_random_engine engine2;
     engine2.seed(std::chrono::system_clock::now().time_since_epoch().count());
     std::uniform_int_distribution<int> distr2(0, all_possible_moves[random_start_position_index].second.size() - 1);

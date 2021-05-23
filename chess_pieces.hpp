@@ -82,6 +82,16 @@ namespace pcs {
                std::vector<std::vector<int>>,
                std::vector<int>> get_all_possible_moves(color piece_color, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board);
 
+    void look_for_horizontal_and_vertical_moves(color piece_color,
+                                                std::vector<int>& valid_new_positions, 
+                                                int start_position_col, int start_position_row, 
+                                                std::vector<std::unique_ptr<chess_piece>>const& chess_board);
+                                                
+    void look_for_diagonal_moves(color piece_color,
+                                 std::vector<int>& valid_new_positions, 
+                                 int start_position_col, int start_position_row, 
+                                 std::vector<std::unique_ptr<chess_piece>>const& chess_board);
+
 
     class pawn : public chess_piece
     {

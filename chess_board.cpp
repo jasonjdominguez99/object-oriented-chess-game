@@ -10,6 +10,7 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <stdexcept>
 #include "chess_board.hpp"
 #include "chess_pieces.hpp"
 
@@ -48,8 +49,7 @@ namespace brd {
     std::unique_ptr<pcs::chess_piece> board::operator[](int idx) const { 
         // Check for out of bound index
         if (idx > 63 && idx >= 0) {
-            std::cerr << "Board index out of range, exiting.";
-            exit(-1); 
+            throw std::out_of_range("Board index out of range");
         }
         if (!chess_board[idx]) {
             return std::move(std::unique_ptr<pcs::chess_piece>{nullptr});
@@ -62,8 +62,7 @@ namespace brd {
     std::unique_ptr<pcs::chess_piece> & board::operator[](int idx) { 
         // Check for out of bound index
         if (idx > 63 && idx >= 0) {
-            std::cerr << "Board index out of range, exiting.";
-            exit(-1); 
+            throw std::out_of_range("Board index out of range");
         }
         return chess_board[idx];
     }
@@ -78,6 +77,10 @@ namespace brd {
         row_input >> row_number;
         row_number -= 1;
 
+        if (row_number < 0 || row_number >= 8) {
+            throw std::out_of_range("Row number out of range");
+        }
+
         int position_index{};
         if (col_letter == 'a') { position_index = row_number*8 + 0; }
         else if (col_letter == 'b') { position_index = row_number*8 + 1; }
@@ -88,14 +91,8 @@ namespace brd {
         else if (col_letter == 'g') { position_index = row_number*8 + 6; }
         else if (col_letter == 'h') { position_index = row_number*8 + 7; }
         else {
-            return -1;
+            throw std::out_of_range("Invalid column letter");
         }
-        /*
-        else {
-            std::cerr << "Invalid board position.";
-            exit(-1);
-        }
-        */
 
         return position_index;
     }
@@ -104,6 +101,10 @@ namespace brd {
     std::string board_index_to_position(int position_index) {
         int row_number = position_index/8 + 1;
         int column_number = position_index%8 + 1;
+
+        if (row_number < 0 || row_number >= 8) {
+            throw std::out_of_range("Row number out of range");
+        }
 
         std::string position;
         if (column_number == 1) { position = "a"; }
@@ -115,8 +116,7 @@ namespace brd {
         else if (column_number == 7) { position = "g"; }
         else if (column_number == 8) { position = "h"; }
         else {
-            std::cerr << "Invalid board position.";
-            exit(-1);
+            throw std::out_of_range("Invalid column");
         }
 
         std::stringstream position_row;
@@ -128,44 +128,51 @@ namespace brd {
 
         return position;
     }
+
+
+    std::vector<std::unique_ptr<pcs::chess_piece>> initialize_board(std::vector<std::unique_ptr<pcs::chess_piece>> chess_board) {
+        // Initialize white pieces on chess board
+        // starting from bottom left to top right
+        chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::white, 0)));
+        chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::white, 1)));
+        chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::white, 2)));
+        chess_board.push_back(std::make_unique<pcs::queen>(pcs::queen(pcs::white, 3)));
+        chess_board.push_back(std::make_unique<pcs::king>(pcs::king(pcs::white, 4)));
+        chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::white, 5)));
+        chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::white, 6)));
+        chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::white, 7)));
+
+        for (size_t i{1*8} ; i < 2*8 ; i++) {
+            chess_board.push_back(std::make_unique<pcs::pawn>(pcs::pawn(pcs::white, i)));
+        }
+
+        // Initialize unoccupied chess board squares
+        // rows 3,4,5,6 (array elements 16-48)
+        for (size_t i{2*8} ; i < 6*8 ; i++) {
+            chess_board.push_back(std::unique_ptr<pcs::chess_piece>{nullptr}); 
+        }
+
+        // Initialize black pieces on chess board
+        for (size_t i{6*8} ; i < 7*8 ; i++) {
+            chess_board.push_back(std::make_unique<pcs::pawn>(pcs::pawn(pcs::black, i)));
+        }
+        
+        chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::black, 7*8)));
+        chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::black, 7*8 + 1)));
+        chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::black, 7*8 + 2)));
+        chess_board.push_back(std::make_unique<pcs::queen>(pcs::queen(pcs::black, 7*8 + 3)));
+        chess_board.push_back(std::make_unique<pcs::king>(pcs::king(pcs::black, 7*8 + 4)));
+        chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::black, 7*8 + 5)));
+        chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::black, 7*8 + 6)));
+        chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::black, 7*8 + 7)));
+
+        return std::move(chess_board);
+    }
 }
 
 
 brd::board::board() {
-    // Initialize white pieces on chess board
-    // starting from bottom left to top right
-    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::white, 0)));
-    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::white, 1)));
-    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::white, 2)));
-    chess_board.push_back(std::make_unique<pcs::queen>(pcs::queen(pcs::white, 3)));
-    chess_board.push_back(std::make_unique<pcs::king>(pcs::king(pcs::white, 4)));
-    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::white, 5)));
-    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::white, 6)));
-    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::white, 7)));
-
-    for (size_t i{1*8} ; i < 2*8 ; i++) {
-        chess_board.push_back(std::make_unique<pcs::pawn>(pcs::pawn(pcs::white, i)));
-    }
-
-    // Initialize unoccupied chess board squares
-    // rows 3,4,5,6 (array elements 16-48)
-    for (size_t i{2*8} ; i < 6*8 ; i++) {
-        chess_board.push_back(std::unique_ptr<pcs::chess_piece>{nullptr}); 
-    }
-
-    // Initialize black pieces on chess board
-    for (size_t i{6*8} ; i < 7*8 ; i++) {
-        chess_board.push_back(std::make_unique<pcs::pawn>(pcs::pawn(pcs::black, i)));
-    }
-        
-    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::black, 7*8)));
-    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::black, 7*8 + 1)));
-    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::black, 7*8 + 2)));
-    chess_board.push_back(std::make_unique<pcs::queen>(pcs::queen(pcs::black, 7*8 + 3)));
-    chess_board.push_back(std::make_unique<pcs::king>(pcs::king(pcs::black, 7*8 + 4)));
-    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::black, 7*8 + 5)));
-    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::black, 7*8 + 6)));
-    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::black, 7*8 + 7)));
+    chess_board = initialize_board(std::move(chess_board));
 }
 
 
@@ -186,40 +193,7 @@ void brd::board::reset() {
     // Clear current chess board
     chess_board.clear();
 
-    // Initialize white pieces on chess board
-    // starting from bottom left to top right
-    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::white, 0)));
-    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::white, 1)));
-    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::white, 2)));
-    chess_board.push_back(std::make_unique<pcs::queen>(pcs::queen(pcs::white, 3)));
-    chess_board.push_back(std::make_unique<pcs::king>(pcs::king(pcs::white, 4)));
-    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::white, 5)));
-    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::white, 6)));
-    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::white, 7)));
-
-    for (size_t i{1*8} ; i < 2*8 ; i++) {
-        chess_board.push_back(std::make_unique<pcs::pawn>(pcs::pawn(pcs::white, i)));
-    }
-
-    // Initialize unoccupied chess board squares
-    // rows 3,4,5,6 (array elements 16-48)
-    for (size_t i{2*8} ; i < 6*8 ; i++) {
-        chess_board.push_back(std::unique_ptr<pcs::chess_piece>{nullptr}); 
-    }
-
-    // Initialize black pieces on chess board
-    for (size_t i{6*8} ; i < 7*8 ; i++) {
-        chess_board.push_back(std::make_unique<pcs::pawn>(pcs::pawn(pcs::black, i)));
-    }
-        
-    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::black, 7*8)));
-    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::black, 7*8 + 1)));
-    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::black, 7*8 + 2)));
-    chess_board.push_back(std::make_unique<pcs::queen>(pcs::queen(pcs::black, 7*8 + 3)));
-    chess_board.push_back(std::make_unique<pcs::king>(pcs::king(pcs::black, 7*8 + 4)));
-    chess_board.push_back(std::make_unique<pcs::bishop>(pcs::bishop(pcs::black, 7*8 + 5)));
-    chess_board.push_back(std::make_unique<pcs::knight>(pcs::knight(pcs::black, 7*8 + 6)));
-    chess_board.push_back(std::make_unique<pcs::rook>(pcs::rook(pcs::black, 7*8 + 7)));
+    chess_board = initialize_board(std::move(chess_board));
 }
 
 
@@ -247,8 +221,7 @@ void brd::board::move_piece(int initial_position, int final_position, move_type 
         } else if (final_position == initial_position - 8 + 1 || final_position == initial_position - 8 - 1) {
             chess_board[final_position] = std::move(chess_board[final_position + 8]);
         } else {
-            std::cerr << "Invalid en passant capture, exiting.";
-            exit(-1);
+            throw std::invalid_argument("Error: Invalid en passant capture");
         }
         chess_board[final_position] = std::move(chess_board[initial_position]);
         
@@ -258,13 +231,11 @@ void brd::board::move_piece(int initial_position, int final_position, move_type 
         } else if (chess_board[initial_position]->get_symbol() == 'K' && final_position < initial_position) {
             chess_board[final_position + 1] = std::move(chess_board[initial_position - 4]); // Move rook
         } else {
-            std::cerr << "Invalid castling move, exiting.";
-            exit(-1);
+            throw std::invalid_argument("Error: Invalid castling move");
         }
         chess_board[final_position] = std::move(chess_board[initial_position]); // Move king as normal
 
     } else {
-        std::cerr << "Invalid move type, exiting.";
-        exit(-1); 
+        throw std::invalid_argument("Error: Invalid move type"); 
     }
 }

@@ -487,7 +487,7 @@ namespace cgm {
         }
 
         // Read the moves made from the pgn file
-        while (pgn_file) {
+        while (!pgn_file.eof()) {
             std::getline(pgn_file, file_entry);
             if (file_entry.find("[") == 0) {
                 // Don't require the header lines
@@ -504,13 +504,13 @@ namespace cgm {
 
             // Add moves to their respective vectors
             if (white_move != "" && white_move != "1-0" && white_move != "1/2-0" &&
-                white_move != "0-1/2" && white_move != "0-1") 
-            {
+                white_move != "0-1/2" && white_move != "0-1") {
+                
                 loaded_moves.push_back(white_move);
             }
             if (black_move != "" && black_move != "1-0" && black_move != "1/2-0" &&
-                black_move != "0-1/2" && black_move != "0-1")
-            {
+                black_move != "0-1/2" && black_move != "0-1") {
+                
                 loaded_moves.push_back(black_move);
             }
         }
@@ -680,7 +680,6 @@ void cgm::chess_game::load_game() {
                     if (!chess_board[start_position_index] || 
                         chess_board[start_position_index]->get_piece_color() != this->current_player->get_piece_color()) {   
                         
-                        //throw "Invalid chess move found";
                         throw std::invalid_argument("Error: Invalid chess move found");
                     } else {
                         std::vector<int> piece_valid_moves{};
@@ -693,7 +692,6 @@ void cgm::chess_game::load_game() {
                     }
                 }
                 if (!move_valid) {
-                    //throw "Invalid chess move found";
                     throw std::invalid_argument("Error: Invalid chess move found");
                 }
     
@@ -763,12 +761,6 @@ void cgm::chess_game::load_game() {
             }
             // Chosen file successfully loaded in, get out of loop
             break;
-        /*
-        } catch (const std::ifstream::failure& e) {
-            std::cerr << std::endl << e.what() << std::endl;
-            //std::cerr << std::endl << "Error: file could not be opened." << std::endl;
-            std::cout << "Please try again with a valid file name" << std::endl << std::endl;
-        */
         } catch (const std::exception& e) {
             std::cerr << std::endl << e.what() << std::endl;
             std::cout << "Please try again with a valid file name" << std::endl << std::endl;

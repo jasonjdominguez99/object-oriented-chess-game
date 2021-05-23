@@ -60,6 +60,7 @@ namespace pcs {
         }
     }
 
+
     std::tuple<std::vector<int>, 
                std::vector<std::vector<int>>,
                std::vector<int>> get_all_possible_moves(color piece_color, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board) {
@@ -89,7 +90,176 @@ namespace pcs {
         }
         return std::make_tuple(possible_start_positions, possible_moves_per_piece, all_possible_moves);
     }
+
+
+    void look_for_horizontal_and_vertical_moves(color piece_color,
+                                                std::vector<int>& valid_new_positions, 
+                                                int start_position_col, int start_position_row, 
+                                                std::vector<std::unique_ptr<pcs::chess_piece>>const& chess_board) {
+        
+        // Find valid horizontal moves
+        for (int i{start_position_col + 1} ; i < 8 ; i++) {
+            if (chess_board[8*start_position_row + i] && 
+                chess_board[8*start_position_row + i]->get_piece_color() == piece_color) {
+                break;
+            } else {
+                valid_new_positions.push_back(8*start_position_row + i); // Move right
+                // If space contains opposite color piece, it cannot be jumped over
+                if (chess_board[8*start_position_row + i] && 
+                    chess_board[8*start_position_row + i]->get_piece_color() != piece_color) {
+                    break;
+                }
+            }
+        }
+        for (int i{start_position_col - 1} ; i >= 0 ; i--) {
+            if (chess_board[8*start_position_row + i] && 
+                chess_board[8*start_position_row + i]->get_piece_color() == piece_color) {
+                break;
+            } else {
+                valid_new_positions.push_back(8*start_position_row + i); // Move left
+                // If space contains opposite color piece, it cannot be jumped over
+                if (chess_board[8*start_position_row + i] && 
+                    chess_board[8*start_position_row + i]->get_piece_color() != piece_color) {
+                    break;
+                }
+            }
+        }
+        // Find valid vertical moves
+        for (int i{start_position_row + 1} ; i < 8 ; i++) {
+            if (chess_board[8*i + start_position_col] && 
+                chess_board[8*i + start_position_col]->get_piece_color() == piece_color) {
+                break;
+            } else {
+                valid_new_positions.push_back(8*i + start_position_col); // Move forward
+                // If space contains opposite color piece, it cannot be jumped over
+                if (chess_board[8*i + start_position_col] && 
+                    chess_board[8*i + start_position_col]->get_piece_color() != piece_color) {
+                    break;
+                }
+            }
+        }
+        for (int i{start_position_row - 1} ; i >= 0 ; i--) {
+            if (chess_board[8*i + start_position_col] && 
+                chess_board[8*i + start_position_col]->get_piece_color() == piece_color) {
+                break;
+            } else {
+                valid_new_positions.push_back(8*i + start_position_col); // Move backward
+                // If space contains opposite color piece, it cannot be jumped over
+                if (chess_board[8*i + start_position_col] && 
+                    chess_board[8*i + start_position_col]->get_piece_color() != piece_color) {
+                    break;
+                }
+            }
+        }
+    }
+
+
+    void look_for_diagonal_moves(color piece_color,
+                                 std::vector<int>& valid_new_positions, 
+                                 int start_position_col, int start_position_row, 
+                                 std::vector<std::unique_ptr<pcs::chess_piece>>const& chess_board) {
+
+        // hi
+        // Find valid diagonal moves
+        // Moving up and to the right
+        bool is_blocked = false;
+        for (int i{start_position_col + 1} ; i < 8 ; i++) {
+            for (int j{start_position_row + 1} ; j < 8 ; j++) {
+                if ( (start_position_col - i) == (start_position_row - j) ) {
+                    if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == piece_color) {
+                        is_blocked = true;
+                        break;
+                    } else {
+                        valid_new_positions.push_back(8*j + i);
+                        // If space contains opposite color piece, it cannot be jumped over
+                        if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != piece_color) {
+                            is_blocked = true;
+                            break;
+                        }
+                    }
+                } else {
+                    continue;
+                }
+            }
+            if (is_blocked) {
+                break;
+            }
+        }
+        // Moving up and to the left
+        is_blocked = false;
+        for (int i{start_position_col - 1} ; i >= 0 ; i--) {
+            for (int j{start_position_row + 1} ; j < 8 ; j++) {
+                if ( (i - start_position_col) == (start_position_row - j) ) {
+                    if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == piece_color) {
+                        is_blocked = true;
+                        break;
+                    } else {
+                        valid_new_positions.push_back(8*j + i);
+                        // If space contains opposite color piece, it cannot be jumped over
+                        if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != piece_color) {
+                            is_blocked = true;
+                            break;
+                        }
+                    }
+                } else {
+                    continue;
+                }
+            }
+            if (is_blocked) {
+                break;
+            }
+        }
+        // Moving down and to the right
+        is_blocked = false;
+        for (int i{start_position_col + 1} ; i < 8 ; i++) {
+            for (int j{start_position_row - 1} ; j >= 0 ; j--) {
+                if ( (start_position_col - i) == (j - start_position_row) ) {
+                    if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == piece_color) {
+                        is_blocked = true;
+                        break;
+                    } else {
+                        valid_new_positions.push_back(8*j + i);
+                        // If space contains opposite color piece, it cannot be jumped over
+                        if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != piece_color) {
+                            is_blocked = true;
+                            break;
+                        }
+                    }
+                } else {
+                    continue;
+                }
+            }
+            if (is_blocked) {
+                break;
+            }
+        }
+        // Moving down and to the left
+        is_blocked = false;
+        for (int i{start_position_col - 1} ; i >= 0 ; i--) {
+            for (int j{start_position_row - 1} ; j >= 0 ; j--) {
+                if ( (i - start_position_col) == (j - start_position_row) ) {
+                    if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == piece_color) {
+                        is_blocked = true;
+                        break;
+                    } else {
+                        valid_new_positions.push_back(8*j + i);
+                        // If space contains opposite color piece, it cannot be jumped over
+                        if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != piece_color) {
+                            is_blocked = true;
+                            break;
+                        }
+                    }
+                } else {
+                    continue;
+                }
+            }
+            if (is_blocked) {
+                break;
+            }
+        }
+    } 
 }
+
 
 // Define functions to get valid move for chess pieces
 std::vector<int> pcs::pawn::get_valid_moves(int start_position, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board) {
@@ -150,6 +320,7 @@ std::vector<int> pcs::pawn::get_valid_moves(int start_position, std::vector<std:
     return valid_new_positions;
 }
 
+
 std::vector<int> pcs::rook::get_valid_moves(int start_position, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board) {
     int start_position_row{start_position/8};
     int start_position_col{start_position%8};
@@ -159,63 +330,14 @@ std::vector<int> pcs::rook::get_valid_moves(int start_position, std::vector<std:
     // Rooks can move vertically or horizontally any number of spaces, but cannot
     // jump over any other chess pieces
 
-    // Find valid horizontal moves
-    for (int i{start_position_col + 1} ; i < 8 ; i++) {
-        if (chess_board[8*start_position_row + i] && 
-            chess_board[8*start_position_row + i]->get_piece_color() == this->get_piece_color()) {
-            break;
-        } else {
-            valid_new_positions.push_back(8*start_position_row + i); // Move right
-            // If space contains opposite color piece, it cannot be jumped over
-            if (chess_board[8*start_position_row + i] && 
-                chess_board[8*start_position_row + i]->get_piece_color() != this->get_piece_color()) {
-                break;
-            }
-        }
-    }
-    for (int i{start_position_col - 1} ; i >= 0 ; i--) {
-        if (chess_board[8*start_position_row + i] && 
-            chess_board[8*start_position_row + i]->get_piece_color() == this->get_piece_color()) {
-            break;
-        } else {
-            valid_new_positions.push_back(8*start_position_row + i); // Move left
-            // If space contains opposite color piece, it cannot be jumped over
-            if (chess_board[8*start_position_row + i] && 
-                chess_board[8*start_position_row + i]->get_piece_color() != this->get_piece_color()) {
-                break;
-            }
-        }
-    }
-    // Find valid vertical moves
-    for (int i{start_position_row + 1} ; i < 8 ; i++) {
-        if (chess_board[8*i + start_position_col] && 
-            chess_board[8*i + start_position_col]->get_piece_color() == this->get_piece_color()) {
-            break;
-        } else {
-            valid_new_positions.push_back(8*i + start_position_col); // Move forward
-            // If space contains opposite color piece, it cannot be jumped over
-            if (chess_board[8*i + start_position_col] && 
-                chess_board[8*i + start_position_col]->get_piece_color() != this->get_piece_color()) {
-                break;
-            }
-        }
-    }
-    for (int i{start_position_row - 1} ; i >= 0 ; i--) {
-        if (chess_board[8*i + start_position_col] && 
-            chess_board[8*i + start_position_col]->get_piece_color() == this->get_piece_color()) {
-            break;
-        } else {
-            valid_new_positions.push_back(8*i + start_position_col); // Move backward
-            // If space contains opposite color piece, it cannot be jumped over
-            if (chess_board[8*i + start_position_col] && 
-                chess_board[8*i + start_position_col]->get_piece_color() != this->get_piece_color()) {
-                break;
-            }
-        }
-    }
+    look_for_horizontal_and_vertical_moves(this->get_piece_color(),
+                                           valid_new_positions, 
+                                           start_position_col, start_position_row, 
+                                           chess_board);
 
     return valid_new_positions;
 }
+
 
 std::vector<int> pcs::knight::get_valid_moves(int start_position, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board) {
     int start_position_row{start_position/8};
@@ -297,6 +419,7 @@ std::vector<int> pcs::knight::get_valid_moves(int start_position, std::vector<st
     return valid_new_positions;
 }
 
+
 std::vector<int> pcs::bishop::get_valid_moves(int start_position, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board) {
     int start_position_row{start_position/8};
     int start_position_col{start_position%8};
@@ -306,105 +429,14 @@ std::vector<int> pcs::bishop::get_valid_moves(int start_position, std::vector<st
     // Bishops can move diagonally any number of spaces, but cannot
     // jump over any other chess pieces
 
-    // Find valid diagonal moves
-    // Moving up and to the right
-    bool is_blocked = false;
-    for (int i{start_position_col + 1} ; i < 8 ; i++) {
-        for (int j{start_position_row + 1} ; j < 8 ; j++) {
-            if ( (start_position_col - i) == (start_position_row - j) ) {
-                if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == this->get_piece_color()) {
-                    is_blocked = true;
-                    break;
-                } else {
-                    valid_new_positions.push_back(8*j + i);
-                    // If space contains opposite color piece, it cannot be jumped over
-                    if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
-                        is_blocked = true;
-                        break;
-                    }
-                }
-            } else {
-                continue;
-            }
-        }
-        if (is_blocked) {
-            break;
-        }
-    }
-    // Moving up and to the left
-    is_blocked = false;
-    for (int i{start_position_col - 1} ; i >= 0 ; i--) {
-        for (int j{start_position_row + 1} ; j < 8 ; j++) {
-            if ( (i - start_position_col) == (start_position_row - j) ) {
-                if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == this->get_piece_color()) {
-                    is_blocked = true;
-                    break;
-                } else {
-                    valid_new_positions.push_back(8*j + i);
-                    // If space contains opposite color piece, it cannot be jumped over
-                    if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
-                        is_blocked = true;
-                        break;
-                    }
-                }
-            } else {
-                continue;
-            }
-        }
-        if (is_blocked) {
-            break;
-        }
-    }
-    // Moving down and to the right
-    is_blocked = false;
-    for (int i{start_position_col + 1} ; i < 8 ; i++) {
-        for (int j{start_position_row - 1} ; j >= 0 ; j--) {
-            if ( (start_position_col - i) == (j - start_position_row) ) {
-                if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == this->get_piece_color()) {
-                    is_blocked = true;
-                    break;
-                } else {
-                    valid_new_positions.push_back(8*j + i);
-                    // If space contains opposite color piece, it cannot be jumped over
-                    if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
-                        is_blocked = true;
-                        break;
-                    }
-                }
-            } else {
-                continue;
-            }
-        }
-        if (is_blocked) {
-            break;
-        }
-    }
-    // Moving down and to the left
-    is_blocked = false;
-    for (int i{start_position_col - 1} ; i >= 0 ; i--) {
-        for (int j{start_position_row - 1} ; j >= 0 ; j--) {
-            if ( (i - start_position_col) == (j - start_position_row) ) {
-                if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == this->get_piece_color()) {
-                    is_blocked = true;
-                    break;
-                } else {
-                    valid_new_positions.push_back(8*j + i);
-                    // If space contains opposite color piece, it cannot be jumped over
-                    if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
-                        is_blocked = true;
-                        break;
-                    }
-                }
-            } else {
-                continue;
-            }
-        }
-        if (is_blocked) {
-            break;
-        }
-    }
+    look_for_diagonal_moves(this->get_piece_color(),
+                            valid_new_positions, 
+                            start_position_col, start_position_row, 
+                            chess_board);
+
     return valid_new_positions;
 }
+
 
 std::vector<int> pcs::queen::get_valid_moves(int start_position, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board) {
     int start_position_row{start_position/8};
@@ -415,158 +447,16 @@ std::vector<int> pcs::queen::get_valid_moves(int start_position, std::vector<std
     // Queens can move diagonally, vertically or horizontally any number
     // of spaces, but cannot jump over any other chess pieces
 
-    // Find valid horizontal moves
-    for (int i{start_position_col + 1} ; i < 8 ; i++) {
-        if (chess_board[8*start_position_row + i] && 
-            chess_board[8*start_position_row + i]->get_piece_color() == this->get_piece_color()) {
-            break;
-        } else {
-            valid_new_positions.push_back(8*start_position_row + i); // Move right
-            // If space contains opposite color piece, it cannot be jumped over
-            if (chess_board[8*start_position_row + i] && 
-                chess_board[8*start_position_row + i]->get_piece_color() != this->get_piece_color()) {
-                break;
-            }
-        }
-    }
-    for (int i{start_position_col - 1} ; i >= 0 ; i--) {
-        if (chess_board[8*start_position_row + i] && 
-            chess_board[8*start_position_row + i]->get_piece_color() == this->get_piece_color()) {
-            break;
-        } else {
-            valid_new_positions.push_back(8*start_position_row + i); // Move left
-            // If space contains opposite color piece, it cannot be jumped over
-            if (chess_board[8*start_position_row + i] && 
-                chess_board[8*start_position_row + i]->get_piece_color() != this->get_piece_color()) {
-                break;
-            }
-        }
-    }
-    // Find valid vertical moves
-    for (int i{start_position_row + 1} ; i < 8 ; i++) {
-        if (chess_board[8*i + start_position_col] && 
-            chess_board[8*i + start_position_col]->get_piece_color() == this->get_piece_color()) {
-            break;
-        } else {
-            valid_new_positions.push_back(8*i + start_position_col); // Move forward
-            // If space contains opposite color piece, it cannot be jumped over
-            if (chess_board[8*i + start_position_col] && 
-                chess_board[8*i + start_position_col]->get_piece_color() != this->get_piece_color()) {
-                break;
-            }
-        }
-    }
-    for (int i{start_position_row - 1} ; i >= 0 ; i--) {
-        if (chess_board[8*i + start_position_col] && 
-            chess_board[8*i + start_position_col]->get_piece_color() == this->get_piece_color()) {
-            break;
-        } else {
-            valid_new_positions.push_back(8*i + start_position_col); // Move backward
-            // If space contains opposite color piece, it cannot be jumped over
-            if (chess_board[8*i + start_position_col] && 
-                chess_board[8*i + start_position_col]->get_piece_color() != this->get_piece_color()) {
-                break;
-            }
-        }
-    }
+    look_for_horizontal_and_vertical_moves(this->get_piece_color(),
+                                           valid_new_positions, 
+                                           start_position_col, start_position_row, 
+                                           chess_board);
 
-    // Find valid diagonal moves
-    // Moving up and to the right
-    bool is_blocked = false;
-    for (int i{start_position_col + 1} ; i < 8 ; i++) {
-        for (int j{start_position_row + 1} ; j < 8 ; j++) {
-            if ( (start_position_col - i) == (start_position_row - j) ) {
-                if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == this->get_piece_color()) {
-                    is_blocked = true;
-                    break;
-                } else {
-                    valid_new_positions.push_back(8*j + i);
-                    // If space contains opposite color piece, it cannot be jumped over
-                    if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
-                        is_blocked = true;
-                        break;
-                    }
-                }
-            } else {
-                continue;
-            }
-        }
-        if (is_blocked) {
-            break;
-        }
-    }
-    // Moving up and to the left
-    is_blocked = false;
-    for (int i{start_position_col - 1} ; i >= 0 ; i--) {
-        for (int j{start_position_row + 1} ; j < 8 ; j++) {
-            if ( (i - start_position_col) == (start_position_row - j) ) {
-                if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == this->get_piece_color()) {
-                    is_blocked = true;
-                    break;
-                } else {
-                    valid_new_positions.push_back(8*j + i);
-                    // If space contains opposite color piece, it cannot be jumped over
-                    if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
-                        is_blocked = true;
-                        break;
-                    }
-                }
-            } else {
-                continue;
-            }
-        }
-        if (is_blocked) {
-            break;
-        }
-    }
-    // Moving down and to the right
-    is_blocked = false;
-    for (int i{start_position_col + 1} ; i < 8 ; i++) {
-        for (int j{start_position_row - 1} ; j >= 0 ; j--) {
-            if ( (start_position_col - i) == (j - start_position_row) ) {
-                if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == this->get_piece_color()) {
-                    is_blocked = true;
-                    break;
-                } else {
-                    valid_new_positions.push_back(8*j + i);
-                    // If space contains opposite color piece, it cannot be jumped over
-                    if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
-                        is_blocked = true;
-                        break;
-                    }
-                }
-            } else {
-                continue;
-            }
-        }
-        if (is_blocked) {
-            break;
-        }
-    }
-    // Moving down and to the left
-    is_blocked = false;
-    for (int i{start_position_col - 1} ; i >= 0 ; i--) {
-        for (int j{start_position_row - 1} ; j >= 0 ; j--) {
-            if ( (i - start_position_col) == (j - start_position_row) ) {
-                if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() == this->get_piece_color()) {
-                    is_blocked = true;
-                    break;
-                } else {
-                    valid_new_positions.push_back(8*j + i);
-                    // If space contains opposite color piece, it cannot be jumped over
-                    if (chess_board[8*j + i] && chess_board[8*j + i]->get_piece_color() != this->get_piece_color()) {
-                        is_blocked = true;
-                        break;
-                    }
-                }
-            } else {
-                continue;
-            }
-        }
-        if (is_blocked) {
-            break;
-        }
-    }
+    look_for_diagonal_moves(this->get_piece_color(),
+                            valid_new_positions, 
+                            start_position_col, start_position_row, 
+                            chess_board);
+    
     return valid_new_positions;
 }
 

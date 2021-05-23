@@ -27,6 +27,8 @@ namespace brd {
     
     enum move_type {standard, en_passant, castling};
 
+    std::vector<std::unique_ptr<pcs::chess_piece>> initialize_board(std::vector<std::unique_ptr<pcs::chess_piece>> chess_board);
+
     class board
     {
         // Friend function for overloading the output operator

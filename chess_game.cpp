@@ -266,47 +266,19 @@ void cgm::chess_game::update_game_status() {
                 // Temporarily make each opposition move and see if king can be saved
                 std::vector<std::unique_ptr<pcs::chess_piece>> chess_board_after_possible_move{std::move(chess_board.get_board())};
                 
-                /*
-                // Will have to edit this for en passant and castling moves
-                chess_board_after_possible_move[*possible_move] = std::move(chess_board_after_possible_move[*possible_start_position]);
-                chess_board_after_possible_move[*possible_move]->has_been_moved();
-                */
-                if (chess_board_after_possible_move[*possible_start_position]->get_symbol() == 'p' &&  
-                    !chess_board_after_possible_move[*possible_move] &&
-                    (*possible_move == *possible_start_position + 8 + 1 || *possible_move == *possible_start_position + 8 - 1) ) {
-
-                    // En passant move upwards
-                    chess_board[*possible_move] = std::move(chess_board[*possible_move - 8]);
-                } else if (chess_board_after_possible_move[*possible_start_position]->get_symbol() == 'p' &&  
-                           !chess_board_after_possible_move[*possible_move] &&
-                           (*possible_move == *possible_start_position - 8 + 1 || *possible_move == *possible_start_position - 8 - 1) ) {
-                
-                    // En passant move down
-                    chess_board[*possible_move] = std::move(chess_board[*possible_move + 8]);
-                }
-                chess_board_after_possible_move[*possible_move] = std::move(chess_board_after_possible_move[*possible_start_position]);
-                chess_board_after_possible_move[*possible_move]->has_been_moved(); 
-
-                // Deep copy the chess board
-                std::vector<std::unique_ptr<pcs::chess_piece>> board_after_possible_move_copy{};
-                for (size_t i{0} ; i < 8*8 ; i++) {
-                    if (!chess_board_after_possible_move[i]) {
-                        board_after_possible_move_copy.push_back(std::unique_ptr<pcs::chess_piece>{nullptr});
-                    } else {
-                        board_after_possible_move_copy.push_back(chess_board_after_possible_move[i]->clone());
-                    }
-                }
+                brd::board board_after_possible_move{chess_board_after_possible_move};
+                board_after_possible_move.move_piece(*possible_start_position, *possible_move);
 
                 std::vector<int> future_current_player_possible_moves = std::get<2>(pcs::get_all_possible_moves(
                                                                                              current_player->get_piece_color(), 
-                                                                                             std::move(chess_board_after_possible_move) ));
+                                                                                             std::move(board_after_possible_move.get_board()) ));
                 // Find if any of these moves will capture the opposition's king
                 bool king_can_be_captured = std::find_if(future_current_player_possible_moves.begin(), 
                                                          future_current_player_possible_moves.end(),
-                                                         [&board_after_possible_move_copy, this](int board_index) {
-                                                             return board_after_possible_move_copy[board_index] &&
-                                                                    board_after_possible_move_copy[board_index]->get_symbol() == 'K' && 
-                                                                    (board_after_possible_move_copy[board_index]->get_piece_color() != 
+                                                         [&board_after_possible_move, this](int board_index) {
+                                                             return board_after_possible_move[board_index] &&
+                                                                    board_after_possible_move[board_index]->get_symbol() == 'K' && 
+                                                                    (board_after_possible_move[board_index]->get_piece_color() != 
                                                                      this->current_player->get_piece_color() );
                                                          }) != future_current_player_possible_moves.end();
  
@@ -405,12 +377,11 @@ void cgm::chess_game::display_stats(std::string player_one_name, std::string pla
 
 void cgm::chess_game::save_game() {
     std::cout << "Please enter a name for the saved file:" << std::endl;
-    std::string file_save_path{};
-    std::cin >> file_save_path;
-    std::cin.clear();
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::string file_name{};
+    
+    std::getline(std::cin, file_name, '\n');
 
-    std::ofstream save_file(file_save_path + ".pgn");
+    std::ofstream save_file(file_name + ".pgn");
 
     // Write heading of file in pgn format
     save_file << "[Event \"Pointless chess game\"]" << std::endl;
@@ -618,15 +589,18 @@ void cgm::chess_game::load_game() {
         try {
             std::cout << "Please enter the name of the .pgn file you would like to load:" << std::endl;
             std::string file_name{};
-            std::cin >> file_name;
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+            std::getline(std::cin, file_name, '\n');
     
             std::vector<std::string> loaded_moves;
-            loaded_moves = read_pgn(file_name);
+            loaded_moves = read_pgn(file_name + ".pgn");
 
             std::cout << std::endl << "Loading game..." << std::endl << std::endl;
 
+            // Ensure white player is first
+            if (this->current_player->get_piece_color() == pcs::black) {
+                this->get_next_player_ready();
+            }
             // Ensure board is in initial setup before loading moves
             chess_board.reset();
 
@@ -665,8 +639,8 @@ void cgm::chess_game::load_game() {
     
                     for (piece_and_moves = first_possible_piece_and_moves ;
                          piece_and_moves < last_possible_piece_and_moves ;
-                         ++piece_and_moves) 
-                    {
+                         ++piece_and_moves) {
+                        
                         // Find whether loaded move is possible
                         std::vector<int> possible_moves = piece_and_moves->second;
                         if (std::find(possible_moves.begin(), possible_moves.end(), end_position_index) != possible_moves.end()) {
@@ -763,7 +737,7 @@ void cgm::chess_game::load_game() {
             break;
         } catch (const std::exception& e) {
             std::cerr << std::endl << e.what() << std::endl;
-            std::cout << "Please try again with a valid file name" << std::endl << std::endl;
+            std::cout << "Please try again with a valid file" << std::endl << std::endl;
         }
     }
 }

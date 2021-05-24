@@ -10,6 +10,7 @@
 #include <sstream>
 #include <vector>
 #include <memory>
+#include <stdexcept>
 #include <iterator>
 #include <tuple>
 #include "chess_pieces.hpp"
@@ -37,7 +38,7 @@ namespace pcs {
             case black:
                 return "black";
             default:
-                return "Invalid chess piece color";
+                throw std::invalid_argument("Invalid chess piece color");
         }
     }
 
@@ -47,16 +48,17 @@ namespace pcs {
         } else if (chess_piece_color == "black" || chess_piece_color == "Black") {
             return black;
         } else {
-            std::cerr << "Invalid chess piece color";
-            exit(-1);
+            throw std::invalid_argument("Invalid chess piece color");
         }
     }
 
     color opposite_color(color chess_piece_color) {
         if (chess_piece_color == white) {
             return black;
-        } else {
+        } else if (chess_piece_color == black) {
             return white;
+        } else {
+            throw std::invalid_argument("Invalid chess piece color");
         }
     }
 

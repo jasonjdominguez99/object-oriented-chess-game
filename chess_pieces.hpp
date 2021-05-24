@@ -66,15 +66,6 @@ namespace pcs {
         
         virtual std::unique_ptr<chess_piece> clone() const = 0;
         virtual std::vector<int> get_valid_moves(int start_position, std::vector<std::unique_ptr<pcs::chess_piece>> chess_board)=0;
-        
-        chess_piece & operator=(chess_piece &chess_piece_to_copy) {
-            if (&chess_piece_to_copy == this) return *this; // account for self-assignment
-        
-            piece_color = chess_piece_to_copy.piece_color;
-            piece_id = chess_piece_to_copy.piece_id;
-
-            return *this;
-        }
     };
 
 

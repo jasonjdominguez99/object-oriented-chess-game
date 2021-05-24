@@ -40,9 +40,11 @@ namespace brd {
     public:
         board();
         board(const board &board_to_copy);
+        board(std::vector<std::unique_ptr<pcs::chess_piece>> &board_to_copy);
         ~board() {};
 
         void move_piece(int initial_position, int final_position, move_type move);
+        void move_piece(int initial_position, int final_position);
         std::unique_ptr<pcs::chess_piece> operator[](int idx) const;
         std::unique_ptr<pcs::chess_piece> & operator[](int idx);
         std::vector<std::unique_ptr<pcs::chess_piece>> get_board() const;

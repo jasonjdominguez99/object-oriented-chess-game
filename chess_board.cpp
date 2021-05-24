@@ -102,7 +102,7 @@ namespace brd {
         int row_number = position_index/8 + 1;
         int column_number = position_index%8 + 1;
 
-        if (row_number < 0 || row_number >= 8) {
+        if (row_number < 1 || row_number > 8) {
             throw std::out_of_range("Row number out of range");
         }
 
@@ -189,6 +189,22 @@ brd::board::board(const brd::board &board_to_copy) {
 }
 
 
+brd::board::board(std::vector<std::unique_ptr<pcs::chess_piece>> &board_to_copy) {
+    // Perform deep copy of all chess piece pointers in chess board to copies 
+    // chess board vector 
+    std::vector<std::unique_ptr<pcs::chess_piece>>::iterator first_piece{board_to_copy.begin()};
+    std::vector<std::unique_ptr<pcs::chess_piece>>::iterator last_piece{board_to_copy.end()};
+    std::vector<std::unique_ptr<pcs::chess_piece>>::iterator board_piece;
+    for (board_piece = first_piece ; board_piece < last_piece ; ++board_piece) {
+        if (!*board_piece) {
+            chess_board.push_back(std::unique_ptr<pcs::chess_piece>{nullptr});
+        } else {
+            chess_board.push_back((*board_piece)->clone());
+        }
+    }
+}
+
+
 void brd::board::reset() {
     // Clear current chess board
     chess_board.clear();
@@ -238,4 +254,22 @@ void brd::board::move_piece(int initial_position, int final_position, move_type 
     } else {
         throw std::invalid_argument("Error: Invalid move type"); 
     }
+}
+
+void brd::board::move_piece(int initial_position, int final_position) {
+    if (chess_board[initial_position]->get_symbol() == 'p' &&  
+        !chess_board[final_position] &&
+        (final_position == initial_position + 8 + 1 || final_position == initial_position + 8 - 1) ) {
+
+        // En passant move upwards
+        chess_board[final_position] = std::move(chess_board[final_position - 8]);
+    } else if (chess_board[initial_position]->get_symbol() == 'p' &&  
+                !chess_board[final_position] &&
+                (final_position == initial_position - 8 + 1 || final_position == initial_position - 8 - 1) ) {
+                
+        // En passant move down
+        chess_board[final_position] = std::move(chess_board[final_position + 8]);
+    }
+    chess_board[final_position] = std::move(chess_board[initial_position]);
+    chess_board[final_position]->has_been_moved();
 }

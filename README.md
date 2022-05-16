@@ -1,4 +1,4 @@
-# Cpp_Object-Oriented_Chess_Game
+# object-oriented-chess-game
  Command line chess game created utilizing object-oriented programming (OOP) in C++.
  
  Key OOP and C++ features:

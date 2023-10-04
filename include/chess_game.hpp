@@ -1,4 +1,4 @@
-// OOPCpp_Final_Assignment_Chess/chess_game.cpp
+// object-oriented-chess-game/chess_game.cpp
 //
 // Header file for chess game class
 // 

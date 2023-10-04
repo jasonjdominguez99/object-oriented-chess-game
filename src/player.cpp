@@ -1,4 +1,4 @@
-// OOPCpp_Final_Assignment_Chess/player_class.cpp
+// object-oriented-chess-game/player_class.cpp
 //
 // Source file for player class
 // 
@@ -12,7 +12,7 @@
 #include <utility>
 #include <random>
 #include <chrono>
-#include "player_class.hpp"
+#include "player.hpp"
 #include "chess_pieces.hpp"
 #include "chess_board.hpp"
 

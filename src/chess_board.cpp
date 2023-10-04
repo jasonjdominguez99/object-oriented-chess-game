@@ -1,4 +1,4 @@
-// OOPCpp_Final_Assignment_Chess/chess_board.cpp
+// object-oriented-chess-game/chess_board.cpp
 //
 // Source file for chess_board class
 // function definitions

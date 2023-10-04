@@ -1,4 +1,4 @@
-// OOPCpp_Final_Assignment_Chess/chess_pieces.h
+// object-oriented-chess-game/chess_pieces.h
 //
 // Header file for chess_piece class
 // and derived classes 

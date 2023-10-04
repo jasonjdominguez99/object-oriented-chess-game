@@ -1,4 +1,4 @@
-// OOPCpp_Final_Assignment_Chess/main.cpp
+// object-oriented-chess-game/main.cpp
 //
 // Main chess game program (previously chess_game.cpp)
 // 
@@ -9,7 +9,7 @@
 #include <memory>
 #include <limits>
 #include "chess_pieces.hpp"
-#include "player_class.hpp"
+#include "player.hpp"
 #include "chess_game.hpp"
 
 

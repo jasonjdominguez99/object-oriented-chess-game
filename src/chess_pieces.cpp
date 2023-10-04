@@ -1,4 +1,4 @@
-// OOPCpp_Final_Assignment_Chess/chess_pieces.cpp
+// object-oriented-chess-game/chess_pieces.cpp
 //
 // Source file for chess_piece class
 // and derived classes function definitions

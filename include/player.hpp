@@ -1,4 +1,4 @@
-// OOPCpp_Final_Assignment_Chess/player_class.hpp
+// object-oriented-chess-game/player_class.hpp
 //
 // Header file for player class
 // 
